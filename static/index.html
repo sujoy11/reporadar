@@ -147,10 +147,27 @@
     background:radial-gradient(220px circle at var(--mx) var(--my), rgba(52,84,255,.10), transparent 65%);
     transition:opacity .25s ease;
   }
-  .tile:hover{ border-color:var(--brand); box-shadow:0 16px 34px -20px rgba(52,84,255,.28); }
+  .tile:hover{ border-color:var(--brand); box-shadow:0 16px 34px -20px rgba(52,84,255,.28); transform:translateY(-3px); }
   .tile:hover::before{ opacity:1; }
   .tile > *{ position:relative; z-index:1; }
   @keyframes pop{ to{ opacity:1; transform:translateY(0) scale(1); } }
+
+  /* ---- loading shimmer skeleton ---- */
+  .skeleton{
+    background:var(--card); border:1px solid var(--line); border-radius:18px;
+    padding:20px; position:relative; overflow:hidden; min-height:120px;
+  }
+  .skeleton .sk-line{ height:12px; border-radius:6px; margin:10px 0; background:var(--line); position:relative; overflow:hidden; }
+  .skeleton .sk-line.w1{ width:55%; }
+  .skeleton .sk-line.w2{ width:80%; }
+  .skeleton .sk-line.w3{ width:40%; }
+  .skeleton .sk-line::after{
+    content:''; position:absolute; inset:0;
+    transform:translateX(-100%);
+    background:linear-gradient(90deg, transparent, rgba(52,84,255,.10), transparent);
+    animation:shimmer 1.3s infinite;
+  }
+  @keyframes shimmer{ 100%{ transform:translateX(100%); } }
 
   /* featured tile — spans full width, slow living gradient */
   .tile.featured{

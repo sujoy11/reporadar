@@ -37,7 +37,7 @@ function tileHTML(r, i, verdict) {
   </div>`;
   }
   return `
-  <div class="tile small" style="animation-delay:${(i*0.06).toFixed(2)}s" data-owner="${owner}" data-name="${name}" role="button">
+  <div class="tile small" style="animation-delay:${Math.min(i*0.06,0.5).toFixed(2)}s" data-owner="${owner}" data-name="${name}" role="button">
     <div class="top-row">
       <div><div class="name"><span class="owner">${owner}/</span>${name}</div></div>
       <span class="rank">#${i+1}</span>
@@ -171,7 +171,11 @@ function closeOverlay(id){
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
-    <div id="rr-loading" style="display:none;text-align:center;padding:40px;color:var(--ink-soft);font-family:'JetBrains Mono';font-size:13px;">⟳ Searching GitHub…</div>
+    <div id="rr-loading" style="display:none;max-width:820px;margin:30px auto;padding:0 24px;">
+      <div class="bento" style="display:grid;grid-template-columns:1fr;gap:14px;margin:0;">
+        ${Array.from({length:6}).map(()=>`<div class="skeleton"><div class="sk-line w1"></div><div class="sk-line w2"></div><div class="sk-line w3"></div></div>`).join('')}
+      </div>
+    </div>
     <div class="bento" id="rr-results" style="display:none;">
       <div id="rr-list" style="grid-column:1/-1;display:grid;grid-template-columns:1fr;gap:14px;"></div>
     </div>
