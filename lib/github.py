@@ -49,7 +49,7 @@ def search_repositories(query, token, per_page=30):
             "name": it["name"],
             "owner": it["owner"]["login"],
             "full_name": it["full_name"],
-            "description": it.get("description") or "",
+            "description": (it.get("description") or "")[:160],
             "url": it["html_url"],
             "stars": it["stargazers_count"],
             "forks": it["forks_count"],
