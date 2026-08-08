@@ -1,0 +1,20 @@
+name: Keep repo active (prevent 60-day workflow disable)
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+
+jobs:
+  touch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update timestamp file
+        run: date > .github/last-active.txt
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/last-active.txt
+          git commit -m "chore: keepalive commit" || echo "No changes"
+          git push

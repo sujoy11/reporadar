@@ -1,0 +1,22 @@
+name: Keep services alive and pre-warm cache
+on:
+  schedule:
+    - cron: '*/12 * * * *'
+  workflow_dispatch:
+
+jobs:
+  cron-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render backend (prevent sleep)
+        run: curl -s "https://reporadar-backend.onrender.com/health" || true
+
+      - name: Pre-warm popular search categories
+        run: |
+          curl -s -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://reporadar-backend.onrender.com/api/prewarm" || true
+
+      - name: Supabase keep-alive ping
+        run: |
+          curl -s -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://reporadar-backend.onrender.com/api/keepalive" || true
