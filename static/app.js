@@ -147,12 +147,19 @@ async function doSearch(q) {
 }
 
 // ---- overlay open/close with body scroll-lock ----
-function openOverlay(id){ document.body.style.overflow = 'hidden'; document.getElementById(id).classList.add('open'); }
+function openOverlay(id){
+  document.body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
+  document.getElementById(id).classList.add('open');
+}
 function closeOverlay(id){
   document.getElementById(id).classList.remove('open');
   // only unlock body if NO other overlay is still open
   const anyOpen = document.querySelector('.overlay.open');
-  if (!anyOpen) document.body.style.overflow = '';
+  if (!anyOpen) {
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+  }
 }
 
 // ---- init ----
