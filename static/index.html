@@ -99,6 +99,34 @@
     .stats-strip .stat{ min-width:72px; }
   }
 
+  /* minimalist "how it works" strip */
+  .how-strip{
+    display:flex; justify-content:center; align-items:stretch; gap:14px;
+    max-width:760px; margin:30px auto 0; padding:0 24px; flex-wrap:wrap;
+    opacity:0; animation:fade-up .7s ease .55s forwards;
+  }
+  .how-step{
+    display:flex; gap:11px; align-items:flex-start;
+    flex:1 1 200px; min-width:180px; text-align:left;
+  }
+  .how-num{
+    flex:none; width:26px; height:26px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px;
+    color:#fff; background:var(--brand);
+  }
+  .how-step b{
+    display:block; font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:14.5px; color:var(--ink); margin-bottom:2px;
+  }
+  .how-step span{
+    display:block; font-size:12.5px; line-height:1.45; color:var(--ink-soft);
+  }
+  @media (max-width:600px){
+    .how-strip{ gap:16px 14px; margin-top:24px; }
+    .how-step{ flex:1 1 100%; min-width:0; }
+  }
+
   /* ---- bento grid ---- */
   .bento{
     max-width:820px; margin:36px auto 70px; padding:0 24px;
@@ -267,6 +295,12 @@
     <div class="stat"><b>200M<span class="accent">+</span></b><span>GitHub repos</span></div>
     <div class="stat"><b>13M<span class="accent">+</span></b><span>Developers</span></div>
     <div class="stat"><b>100<span class="accent">%</span></b><span>AI-verified</span></div>
+  </div>
+
+  <div class="how-strip">
+    <div class="how-step"><span class="how-num">1</span><div><b>Search</b><span>Type what you need — Termux tools, ML libs, anything.</span></div></div>
+    <div class="how-step"><span class="how-num">2</span><div><b>AI checks</b><span>We verify if it's still maintained, mature &amp; safe to use.</span></div></div>
+    <div class="how-step"><span class="how-num">3</span><div><b>Pick &amp; ship</b><span>Get the repo that actually works — skip the dead ends.</span></div></div>
   </div>
 </div>
 
