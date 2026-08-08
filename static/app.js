@@ -156,7 +156,7 @@ function closeOverlay(id){ document.getElementById(id).classList.remove('open');
   wrap.innerHTML = `
     <div id="rr-loading" style="display:none;text-align:center;padding:40px;color:var(--ink-soft);font-family:'JetBrains Mono';font-size:13px;">⟳ Searching GitHub…</div>
     <div class="bento" id="rr-results" style="display:none;">
-      <div id="rr-list" style="grid-column:1/-1;display:grid;grid-template-columns:repeat(2,1fr);gap:14px;"></div>
+      <div id="rr-list" style="grid-column:1/-1;display:grid;grid-template-columns:1fr;gap:14px;"></div>
     </div>
 
     <div class="overlay" id="rr-detail">
