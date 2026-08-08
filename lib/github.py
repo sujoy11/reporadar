@@ -24,8 +24,10 @@ def search_repositories(query, token, per_page=30):
       -> search "hermes" -> NousResearch/hermes-agent at top).
     """
     STOP = {"install", "setup", "how", "to", "guide", "tutorial", "download",
-            "get", "use", "using", "for", "the", "a", "an", "best", "top",
-            "app", "tool", "github", "reddit", "vs", "alternative", "free"}
+    "get", "use", "using", "for", "the", "a", "an", "best", "top",
+            "app", "tool", "github", "reddit", "vs", "alternative", "free",
+            "in", "on", "of", "me", "my", "you", "your", "with", "and", "or",
+            "ios", "android", "windows", "macos", "linux", "web", "api", "ui"}
     words = [w for w in query.lower().split() if w not in STOP]
     if not words:
         words = query.lower().split()[:3]
