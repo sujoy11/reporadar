@@ -35,20 +35,25 @@ async def verify(owner: str = "", name: str = ""):
         return {"error": "ai_unavailable", "message": str(e)}
 
     # 4) parse structured fields from the AI text
+    import re as _re
     verdict = "Needs Caution ⚠️"
     maintained = ""
     maturity = ""
     setup = ""
+    def clean(s):
+        s = _re.sub(r'^\s*\d+\.\s*', '', s)         # strip "1. "
+        s = _re.sub(r'\*\*', '', s)                  # strip bold
+        return s.strip()
     for line in text.splitlines():
         u = line.upper()
         if "VERDICT" in u:
-            verdict = line.split(":", 1)[-1].strip() or verdict
+            verdict = clean(line.split(":", 1)[-1]) or verdict
         elif "MAINTAINED" in u:
-            maintained = line.split("?", 1)[-1].strip()
+            maintained = clean(line.split("?", 1)[-1] or line.split(":", 1)[-1])
         elif "MATURITY" in u:
-            maturity = line.split(":", 1)[-1].strip()
+            maturity = clean(line.split(":", 1)[-1])
         elif "SETUP" in u:
-            setup = line.split(":", 1)[-1].strip()
+            setup = clean(line.split(":", 1)[-1])
     db.set_verified(owner, name, verdict, text, provider, detail.get("stars", 0))
     return {"source": "live", "owner": owner, "name": name,
             "verdict": verdict, "summary": text, "ai_provider": provider,
