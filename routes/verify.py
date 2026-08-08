@@ -14,12 +14,15 @@ async def verify(owner: str = "", name: str = ""):
         return {"error": "missing_params"}
     full = f"{owner}/{name}"
 
-    # 1) cache
+    # 1) cache — but if cached entry has no reasoning (old format), re-verify
     cached = db.get_verified(owner, name)
-    if cached:
+    if cached and cached.get("reasoning"):
         return {"source": "cache", "owner": owner, "name": name,
                 "verdict": cached.get("verdict"), "summary": cached.get("summary"),
-                "ai_provider": cached.get("ai_provider")}
+                "ai_provider": cached.get("ai_provider"),
+                "maintained": cached.get("maintained"), "maturity": cached.get("maturity"),
+                "setup": cached.get("setup"), "reasoning": cached.get("reasoning")}
+    # fall through to fresh verify if no valid cache
 
     # 2) fetch detail
     token = os.environ.get("GITHUB_TOKEN")

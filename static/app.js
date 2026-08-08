@@ -181,6 +181,16 @@ function closeOverlay(id){ document.getElementById(id).classList.remove('open');
   const bento = document.querySelector('.bento');
   if (bento && bento.parentNode) bento.parentNode.insertBefore(wrap, bento.nextSibling);
 
+  // hide the static demo bento on load — show a friendly prompt instead
+  const demo = document.querySelector('.bento:not(#rr-results)');
+  if (demo) {
+    demo.style.display = 'none';
+    const hint = document.createElement('div');
+    hint.id = 'rr-hint';
+    hint.innerHTML = '<div style="max-width:820px;margin:36px auto 70px;padding:0 24px;text-align:center;color:var(--ink-soft);font-size:14px;">🔍 Search above to discover AI-verified GitHub repos.</div>';
+    demo.parentNode.insertBefore(hint, demo.nextSibling);
+  }
+
   const run = () => doSearch(input.value);
   if (btn) btn.addEventListener('click', run);
   if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
