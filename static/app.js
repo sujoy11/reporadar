@@ -23,22 +23,21 @@ function tileHTML(r, i, verdict) {
   const vc = verdict ? verdictClass(verdict) : 'warn';
   const label = verdict ? verdictLabel(verdict) : 'Click AI';
   const owner = r.owner, name = r.name;
-  const click = `onclick="openDetail('${owner}','${name}')"`;
   if (i === 0) {
     return `
-  <div class="tile featured" style="animation-delay:.04s" ${click} role="button">
+  <div class="tile featured" style="animation-delay:.04s" data-owner="${owner}" data-name="${name}" role="button">
     <span class="tag-top"><span class="star-ico">★</span> top pick</span>
     <div class="name"><span class="owner">${owner}/</span>${name}</div>
     <div class="desc">${r.description || 'No description available.'}</div>
     <div class="foot">
       <span class="stars">${starSvg}<b class="num">${fmtStars(r.stars)}</b></span>
       <span class="updated">updated ${fmtDate(r.updated_at)}</span>
-      <button class="badge ${vc}" style="cursor:pointer;border:none;font:inherit;" onclick="event.stopPropagation();verifyRepo('${owner}','${name}',0)"><span class="sw"></span>${label}</button>
+      <button class="badge ${vc}" type="button" data-verify="${owner}|${name}|0" style="cursor:pointer;border:none;font:inherit;"><span class="sw"></span>${label}</button>
     </div>
   </div>`;
   }
   return `
-  <div class="tile small" style="animation-delay:${(i*0.06).toFixed(2)}s" ${click} role="button">
+  <div class="tile small" style="animation-delay:${(i*0.06).toFixed(2)}s" data-owner="${owner}" data-name="${name}" role="button">
     <div class="top-row">
       <div><div class="name"><span class="owner">${owner}/</span>${name}</div></div>
       <span class="rank">#${i+1}</span>
@@ -46,7 +45,7 @@ function tileHTML(r, i, verdict) {
     <div class="desc">${r.description || 'No description available.'}</div>
     <div class="foot">
       <span class="stars">${starSvg}<b class="num">${fmtStars(r.stars)}</b></span>
-      <button class="badge ${vc}" style="cursor:pointer;border:none;font:inherit;" onclick="event.stopPropagation();verifyRepo('${owner}','${name}',${i})"><span class="sw"></span>${label}</button>
+      <button class="badge ${vc}" type="button" data-verify="${owner}|${name}|${i}" style="cursor:pointer;border:none;font:inherit;"><span class="sw"></span>${label}</button>
     </div>
   </div>`;
 }
@@ -112,7 +111,7 @@ async function openDetail(owner, name) {
       <p class="dt-desc">${det.description || 'No description.'}</p>
       ${det.readme ? `<div class="dt-readme">${escapeHtml(det.readme.slice(0,1400))}</div>` : ''}
       <div class="dt-actions">
-        <button class="badge warn" style="cursor:pointer;border:none;font:inherit;" onclick="verifyRepo('${owner}','${name}',0)"><span class="sw"></span>AI Check</button>
+        <button class="badge warn" type="button" data-verify="${owner}|${name}|0" style="cursor:pointer;border:none;font:inherit;"><span class="sw"></span>AI Check</button>
         <a class="dt-link" href="${det.html_url||'#'}" target="_blank" rel="noopener">Open on GitHub →</a>
       </div>`;
   } catch (e) {
@@ -164,7 +163,7 @@ function closeOverlay(id){ document.getElementById(id).classList.remove('open');
 
     <div class="overlay" id="rr-detail">
       <div class="overlay-inner">
-        <button class="overlay-close" onclick="closeOverlay('rr-detail')">×</button>
+        <button class="overlay-close" data-close="rr-detail">×</button>
         <h2 id="dt-title" class="dt-title"></h2>
         <div id="dt-body"></div>
       </div>
@@ -172,7 +171,7 @@ function closeOverlay(id){ document.getElementById(id).classList.remove('open');
 
     <div class="overlay" id="rr-overlay">
       <div class="overlay-inner">
-        <button class="overlay-close" onclick="closeOverlay('rr-overlay')">×</button>
+        <button class="overlay-close" data-close="rr-overlay">×</button>
         <h2 id="ov-title" class="dt-title"></h2>
         <div id="ov-verdict" class="badge" style="margin:10px 0;"></div>
         <div id="ov-reason" class="reason-box"></div>
@@ -190,6 +189,21 @@ function closeOverlay(id){ document.getElementById(id).classList.remove('open');
     hint.innerHTML = '<div style="max-width:820px;margin:36px auto 70px;padding:0 24px;text-align:center;color:var(--ink-soft);font-size:14px;">🔍 Search above to discover AI-verified GitHub repos.</div>';
     demo.parentNode.insertBefore(hint, demo.nextSibling);
   }
+
+  // ---- event delegation for tiles + AI badges + overlay close ----
+  document.addEventListener('click', e => {
+    const closeBtn = e.target.closest('[data-close]');
+    if (closeBtn) { closeOverlay(closeBtn.getAttribute('data-close')); return; }
+    const verifyBtn = e.target.closest('[data-verify]');
+    if (verifyBtn) {
+      e.stopPropagation();
+      const [o, n, i] = verifyBtn.getAttribute('data-verify').split('|');
+      verifyRepo(o, n, parseInt(i, 10) || 0);
+      return;
+    }
+    const tile = e.target.closest('[data-owner]');
+    if (tile) { openDetail(tile.getAttribute('data-owner'), tile.getAttribute('data-name')); }
+  });
 
   const run = () => doSearch(input.value);
   if (btn) btn.addEventListener('click', run);
