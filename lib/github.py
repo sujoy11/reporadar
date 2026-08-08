@@ -13,9 +13,24 @@ def _headers(token, accept="application/vnd.github+json"):
 
 
 def search_repositories(query, token, per_page=30):
-    """Live GitHub Search API. Returns list of normalized repo dicts or raises."""
-    q = urllib.parse.quote_plus(query)
-    url = (f"https://api.github.com/search/repositories?q={q}"
+    """Live GitHub Search API. Returns list of normalized repo dicts or raises.
+
+    Query is made intent-aware:
+    - Generic intent verbs (install/setup/how-to/guide/download/use...) are
+      dropped — they hurt relevance because GitHub then matches any repo
+      containing the word instead of the actual topic.
+    - Remaining topic terms are scoped to name/description so results are
+      about the topic, surfacing the real project (e.g. "Hermes Install"
+      -> search "hermes" -> NousResearch/hermes-agent at top).
+    """
+    STOP = {"install", "setup", "how", "to", "guide", "tutorial", "download",
+            "get", "use", "using", "for", "the", "a", "an", "best", "top",
+            "app", "tool", "github", "reddit", "vs", "alternative", "free"}
+    words = [w for w in query.lower().split() if w not in STOP]
+    if not words:
+        words = query.lower().split()[:3]
+    q = " ".join(words) + " in:name,description"
+    url = (f"https://api.github.com/search/repositories?q={urllib.parse.quote_plus(q)}"
            f"&sort=stars&order=desc&per_page={per_page}")
     req = urllib.request.Request(url, headers=_headers(token))
     try:
