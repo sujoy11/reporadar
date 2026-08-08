@@ -48,9 +48,7 @@ async def verify(owner: str = "", name: str = ""):
         return s.strip()
     for line in text.splitlines():
         u = line.upper()
-        if u.startswith("4") or (u.startswith("1") and "MAINTAINED" in u) or "VERDICT:" in u:
-            verdict = clean(line.split(":", 1)[-1]) or verdict
-        elif u.startswith("1") and "MAINTAINED:" in u:
+        if u.startswith("1") and "MAINTAINED:" in u:
             maintained = clean(line.split(":", 1)[-1])
         elif u.startswith("2") and "MATURITY:" in u:
             maturity = clean(line.split(":", 1)[-1])
@@ -58,6 +56,8 @@ async def verify(owner: str = "", name: str = ""):
             setup = clean(line.split(":", 1)[-1])
         elif u.startswith("5") and "REASONING:" in u:
             reasoning = clean(line.split(":", 1)[-1])
+        elif u.startswith("4") or "VERDICT:" in u:
+            verdict = clean(line.split(":", 1)[-1]) or verdict
     db.set_verified(owner, name, verdict, text, provider, detail.get("stars", 0))
     return {"source": "live", "owner": owner, "name": name,
             "verdict": verdict, "summary": text, "ai_provider": provider,
