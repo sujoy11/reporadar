@@ -188,7 +188,8 @@
   }
   /* mobile full-width: remove centered max-width + side padding so no gap */
   @media (max-width:600px){
-    .hero, .results-wrap{ max-width:100%; padding-left:16px; padding-right:16px; }
+    .hero, .results-wrap, #rr-results{ max-width:100%; padding-left:16px; padding-right:16px; }
+    #rr-results{ margin-left:0; margin-right:0; }
   }
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } .card{ opacity:1; transform:none; } }
 </style>
