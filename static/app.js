@@ -88,6 +88,8 @@ function showAIPopup(owner, name, d) {
       <span class="why-label">${whyPrefix(d.verdict)}</span>
       <p>${escapeHtml(d.reasoning)}</p>
     </div>` : ''}`;
+  // ensure ONLY the AI popup is open (close detail if it was open)
+  document.getElementById('rr-detail').classList.remove('open');
   openOverlay('rr-overlay');
 }
 
@@ -205,11 +207,16 @@ function closeOverlay(id){
     if (closeBtn) { closeOverlay(closeBtn.getAttribute('data-close')); return; }
     const verifyBtn = e.target.closest('[data-verify]');
     if (verifyBtn) {
+      // AI Check button lives INSIDE the open detail panel → allow it
+      const insideOpen = verifyBtn.closest('.overlay.open');
+      if (!insideOpen && document.querySelector('.overlay.open')) return; // block if from background while another open
       e.stopPropagation();
       const [o, n, i] = verifyBtn.getAttribute('data-verify').split('|');
       verifyRepo(o, n, parseInt(i, 10) || 0);
       return;
     }
+    // clicking a background card while an overlay is open → ignore (1 overlay at a time)
+    if (document.querySelector('.overlay.open')) return;
     const tile = e.target.closest('[data-owner]');
     if (tile) { openDetail(tile.getAttribute('data-owner'), tile.getAttribute('data-name')); }
   });
