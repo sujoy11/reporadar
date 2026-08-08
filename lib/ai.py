@@ -73,11 +73,11 @@ def _call_gemini(full_name, data):
 
 
 def verify_repo(full_name, data):
-    """Try Gemini, fall back to Mistral. Returns (verdict_text, provider)."""
+    """Mistral primary (OpenCompare-style), Gemini fallback. Returns (verdict_text, provider)."""
     try:
-        return _call_gemini(full_name, data)
+        return _call_mistral(full_name, data)
     except Exception:
         try:
-            return _call_mistral(full_name, data)
+            return _call_gemini(full_name, data)
         except Exception as e:
             raise RuntimeError(f"ai_unavailable: {e}")
