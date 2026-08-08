@@ -1,7 +1,6 @@
-/* RepoRadar frontend wiring — loads alongside your design HTML.
-   Your index.html is untouched; this file connects search + verify to the API.
-   Cards reuse your exact .card / .ring-wrap / .badge markup.
-   NOTE: this script is injected at end of <body>, so the DOM is already ready. */
+/* RepoRadar frontend wiring — loads alongside your Bento design HTML.
+   Your index.html is untouched (except an id on the input); this file
+   connects search + verify to the API and renders the bento grid. */
 
 const fmtStars = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/, '') + 'k' : '' + n;
 const fmtDate = iso => {
@@ -9,40 +8,55 @@ const fmtDate = iso => {
   const d = new Date(iso), days = (Date.now() - d) / 86400000;
   if (days < 1) return 'today';
   if (days < 30) return Math.floor(days) + ' days ago';
-  if (days < 365) return Math.floor(days / 30) + ' months ago';
-  return Math.floor(days / 365) + ' years ago';
+  if (days < 365) return Math.floor(days/30) + ' months ago';
+  return Math.floor(days/365) + ' years ago';
 };
 const verdictClass = v => /working|✅/i.test(v) ? 'good' : /outdated|❌/i.test(v) ? 'bad' : 'warn';
-const verdictLabel = v => /working|✅/i.test(v) ? 'Working' : /outdated|❌/i.test(v) ? 'Outdated' : 'Needs caution';
-// ring offset: lower = more filled (your design: 8 full .. 63 empty)
-const ringOffset = v => /good/i.test(v) ? 8 : /bad/i.test(v) ? 63 : 34;
+const verdictLabel = v => /working|✅/i.test(v) ? 'Working' : /outdated|❌/i.test(v) ? 'Outdated' : 'Caution';
 
-function cardHTML(r, i, verdict) {
+// star svg markup reused from your theme
+const starSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>';
+
+function tileHTML(r, i, verdict) {
   const vc = verdict ? verdictClass(verdict) : 'warn';
-  const off = verdict ? ringOffset(verdict) : 34;
   const label = verdict ? verdictLabel(verdict) : 'Click AI';
   const owner = r.owner, name = r.name;
+  if (i === 0) {
+    // featured full-width tile
+    return `
+  <div class="tile featured" style="animation-delay:.04s">
+    <span class="tag-top"><span class="star-ico">★</span> top pick</span>
+    <div class="name"><span class="owner">${owner}/</span>${name}</div>
+    <div class="desc">${r.description || 'No description available.'}</div>
+    <div class="foot">
+      <span class="stars">${starSvg}<b class="num">${fmtStars(r.stars)}</b></span>
+      <span class="updated">updated ${fmtDate(r.updated_at)}</span>
+      <button class="badge ${vc}" style="cursor:pointer;border:none;font:inherit;" onclick="verifyRepo('${owner}','${name}',0)"><span class="sw"></span>${label}</button>
+    </div>
+  </div>`;
+  }
+  // small tile
   return `
-  <div class="card" data-verdict="${vc}" id="card-${i}">
-    <div class="ring-wrap">
-      <svg><circle class="ring-track" cx="20" cy="20" r="16"></circle><circle class="ring-fill" cx="20" cy="20" r="16" style="--offset:${off}"></circle></svg>
-      <div class="rank-txt">#${i + 1}</div>
+  <div class="tile small" style="animation-delay:${(i*0.06).toFixed(2)}s">
+    <div class="top-row">
+      <div>
+        <div class="name"><span class="owner">${owner}/</span>${name}</div>
+      </div>
+      <span class="rank">#${i+1}</span>
     </div>
-    <div class="repo-main">
-      <div class="repo-top"><span class="repo-name"><span class="owner">${owner}/</span>${name}</span></div>
-      <div class="repo-desc">${r.description || 'No description'}</div>
-      <div class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>${fmtStars(r.stars)} · updated ${fmtDate(r.updated_at)}</div>
+    <div class="desc">${r.description || 'No description available.'}</div>
+    <div class="foot">
+      <span class="stars">${starSvg}<b class="num">${fmtStars(r.stars)}</b></span>
+      <button class="badge ${vc}" style="cursor:pointer;border:none;font:inherit;" onclick="verifyRepo('${owner}','${name}',${i})"><span class="sw"></span>${label}</button>
     </div>
-    <button class="badge ${vc}" style="cursor:pointer;border:none;font:inherit;" onclick="verifyRepo('${owner}','${name}',${i})">
-      <span class="pulse"></span>${label}
-    </button>
   </div>`;
 }
 
 async function verifyRepo(owner, name, i) {
-  const btn = document.querySelector(`#card-${i} .badge`);
+  const btn = document.querySelector(`#rr-list .tile:nth-child(${i+1}) .badge`) || document.querySelectorAll('#rr-list .badge')[i];
+  if (!btn) return;
   const orig = btn.innerHTML;
-  btn.innerHTML = '<span class="pulse"></span>Checking…';
+  btn.innerHTML = '<span class="sw"></span>Checking…';
   try {
     const r = await fetch(`/api/verify?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(name)}`);
     const d = await r.json();
@@ -50,7 +64,7 @@ async function verifyRepo(owner, name, i) {
       const vc = verdictClass(d.verdict);
       btn.className = `badge ${vc}`;
       btn.style.cursor = 'pointer'; btn.style.border = 'none'; btn.style.font = 'inherit';
-      btn.innerHTML = `<span class="pulse"></span>${verdictLabel(d.verdict)}`;
+      btn.innerHTML = `<span class="sw"></span>${verdictLabel(d.verdict)}`;
     } else {
       btn.innerHTML = orig;
       alert('AI unavailable: ' + (d.message || d.error || 'try again'));
@@ -65,6 +79,8 @@ async function doSearch(q) {
   if (!q.trim()) return;
   const loading = document.getElementById('rr-loading');
   const results = document.getElementById('rr-results');
+  const demo = document.querySelector('.bento:not(#rr-results)');
+  if (demo) demo.style.display = 'none';
   loading.style.display = 'block'; results.style.display = 'none';
   try {
     const r = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
@@ -72,39 +88,29 @@ async function doSearch(q) {
     loading.style.display = 'none';
     if (d.error) { alert(d.message || d.error); return; }
     const list = d.results || [];
-    document.getElementById('rr-count').textContent = list.length;
     if (list.length === 0) {
-      document.getElementById('rr-list').innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-soft);font-size:14px;">No repos found for that term.<br>Try a simpler query (e.g. "poco custom rom").</div>';
+      document.getElementById('rr-list').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--ink-soft);font-size:14px;">No repos found for that term.<br>Try a simpler query (e.g. "poco custom rom").</div>';
     } else {
-      document.getElementById('rr-list').innerHTML = list.map((x, i) => cardHTML(x, i)).join('');
+      document.getElementById('rr-list').innerHTML = list.map((x, i) => tileHTML(x, i)).join('');
     }
-    results.style.display = 'block';
-    document.querySelectorAll('#rr-list .card').forEach(c => c.classList.add('in-view'));
+    results.style.display = 'grid';
   } catch (e) {
     loading.style.display = 'none'; alert('Search failed');
   }
 }
 
-// --- init (DOM already ready because script is at end of <body>) ---
+// init (script is at end of <body>, DOM ready)
 (function init() {
-  // hide the static demo fallback so only live results show
-  const fb = document.getElementById('staticFallback');
-  if (fb) fb.style.display = 'none';
-
   const input = document.getElementById('searchInput');
+  // build live results container that mirrors your .bento grid
   const wrap = document.createElement('div');
   wrap.innerHTML = `
     <div id="rr-loading" style="display:none;text-align:center;padding:40px;color:var(--ink-soft);font-family:'JetBrains Mono';font-size:13px;">⟳ Searching GitHub…</div>
-    <div class="results-wrap" id="rr-results" style="display:none;">
-      <div class="results-head"><h2><b id="rr-count">0</b> repos found</h2><span class="sort-tag">★ sorted by stars</span></div>
-      <div id="rr-list"></div>
+    <div class="bento" id="rr-results" style="display:none;">
+      <div id="rr-list" style="grid-column:1/-1;display:grid;grid-template-columns:repeat(2,1fr);gap:14px;"></div>
     </div>`;
-  const footer = document.querySelector('footer');
-  if (footer) footer.before(wrap);
-
-  // hide the static demo results block (your design's default) once live results render
-  const origWrap = document.querySelector('.results-wrap:not(#rr-results):not(#staticFallback)');
-  if (origWrap) origWrap.style.display = 'none';
+  const bento = document.querySelector('.bento');
+  if (bento && bento.parentNode) bento.parentNode.insertBefore(wrap, bento.nextSibling);
 
   if (input) {
     input.addEventListener('input', () => {
