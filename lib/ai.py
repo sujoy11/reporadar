@@ -5,7 +5,7 @@ import json
 
 
 PROMPT = """You are analyzing a GitHub repository based ONLY on the data provided.
-Do not invent facts. Answer in 3 short parts.
+Do not invent facts. Answer in 5 short parts.
 
 Repository: {full_name}
 Description: {description}
@@ -15,12 +15,12 @@ Latest release: {latest_release}
 Last push: {pushed_at}
 Archived: {archived}
 
-Answer:
-1. ACTIVELY MAINTAINED? (Yes/No/Unclear + one line why)
+Answer (keep each line short, plain text, no markdown):
+1. MAINTAINED: Yes/No/Unclear + one short reason
 2. MATURITY: Production-ready / Experimental / Early-stage
 3. SETUP: Simple / Moderate / Complex
 4. VERDICT: Working ✅ / Needs Caution ⚠️ / Outdated ❌
-5. ONE-LINE SUMMARY: """
+5. REASONING: one concise sentence explaining WHY the verdict is what it is (e.g. "Recent commits + stable releases + active issues = working" or "Last update 2 years ago + no releases = outdated" or "Some activity but no recent release + open critical bugs = caution")."""
 
 
 def _call_mistral(full_name, data):

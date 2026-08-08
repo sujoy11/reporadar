@@ -40,6 +40,7 @@ async def verify(owner: str = "", name: str = ""):
     maintained = ""
     maturity = ""
     setup = ""
+    reasoning = ""
     def clean(s):
         s = _re.sub(r'^\s*\d+\.\s*', '', s)         # strip "1. "
         s = _re.sub(r'\*\*', '', s)                  # strip bold
@@ -54,7 +55,10 @@ async def verify(owner: str = "", name: str = ""):
             maturity = clean(line.split(":", 1)[-1])
         elif "SETUP" in u:
             setup = clean(line.split(":", 1)[-1])
+        elif "REASONING" in u:
+            reasoning = clean(line.split(":", 1)[-1])
     db.set_verified(owner, name, verdict, text, provider, detail.get("stars", 0))
     return {"source": "live", "owner": owner, "name": name,
             "verdict": verdict, "summary": text, "ai_provider": provider,
-            "maintained": maintained, "maturity": maturity, "setup": setup}
+            "maintained": maintained, "maturity": maturity, "setup": setup,
+            "reasoning": reasoning}

@@ -15,6 +15,7 @@ const fmtDate = iso => {
 };
 const verdictClass = v => /working|✅/i.test(v) ? 'good' : /outdated|❌/i.test(v) ? 'bad' : 'warn';
 const verdictLabel = v => /working|✅/i.test(v) ? 'Working' : /outdated|❌/i.test(v) ? 'Outdated' : 'Caution';
+const whyPrefix = v => /working|✅/i.test(v) ? '✅ Why it works' : /outdated|❌/i.test(v) ? '❌ Why it\'s outdated' : '⚠️ Why caution';
 const starSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>';
 
 // ---- tile markup (mirrors your theme classes so animations apply) ----
@@ -77,7 +78,6 @@ async function verifyRepo(owner, name, i) {
 function showAIPopup(owner, name, d) {
   const vc = verdictClass(d.verdict);
   const panel = document.getElementById('rr-overlay');
-  panel.querySelector('.overlay-card').className = `overlay-card ${vc}`;
   panel.querySelector('#ov-title').innerHTML = `<span class="owner">${owner}/</span>${name}`;
   panel.querySelector('#ov-verdict').className = `badge ${vc}`;
   panel.querySelector('#ov-verdict').innerHTML = `<span class="sw"></span>${verdictLabel(d.verdict)}`;
@@ -85,7 +85,10 @@ function showAIPopup(owner, name, d) {
     <div class="reason-row"><span class="rl">Maintained</span><span class="rv">${d.maintained || '—'}</span></div>
     <div class="reason-row"><span class="rl">Maturity</span><span class="rv">${d.maturity || '—'}</span></div>
     <div class="reason-row"><span class="rl">Setup</span><span class="rv">${d.setup || '—'}</span></div>
-    <div class="reason-full">${escapeHtml(d.summary || '')}</div>`;
+    <div class="reason-why ${vc}">
+      <span class="why-label">${whyPrefix(d.verdict)}</span>
+      <p>${escapeHtml(d.reasoning || d.summary || 'No detailed reasoning available.')}</p>
+    </div>`;
   panel.classList.add('open');
 }
 
