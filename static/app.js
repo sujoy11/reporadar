@@ -98,6 +98,10 @@ async function doSearch(q) {
   const footer = document.querySelector('footer');
   if (footer) footer.before(wrap);
 
+  // hide the static demo results block (your design's default) once live results render
+  const origWrap = document.querySelector('.results-wrap:not(#rr-results):not(#staticFallback)');
+  if (origWrap) origWrap.style.display = 'none';
+
   if (input) {
     input.addEventListener('input', () => {
       clearTimeout(debounce);
