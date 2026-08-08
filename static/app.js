@@ -1,8 +1,10 @@
-/* RepoRadar frontend wiring — loads alongside your Bento design HTML.
-   Your index.html is untouched (except an id on the input); this file
-   connects search + verify to the API and renders the bento grid. */
+/* RepoRadar frontend wiring — Bento theme.
+   Your index.html is untouched (except id on input + a search button).
+   This file: manual search button, card-click detail panel, AI popup
+   with reasoning, and preserves all your theme animations. */
 
 const fmtStars = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/, '') + 'k' : '' + n;
+const fmtNum = n => n >= 1000 ? (n/1000).toFixed(1).replace(/\.0$/, '') + 'k' : '' + n;
 const fmtDate = iso => {
   if (!iso) return 'unknown';
   const d = new Date(iso), days = (Date.now() - d) / 86400000;
@@ -13,47 +15,44 @@ const fmtDate = iso => {
 };
 const verdictClass = v => /working|✅/i.test(v) ? 'good' : /outdated|❌/i.test(v) ? 'bad' : 'warn';
 const verdictLabel = v => /working|✅/i.test(v) ? 'Working' : /outdated|❌/i.test(v) ? 'Outdated' : 'Caution';
-
-// star svg markup reused from your theme
 const starSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>';
 
+// ---- tile markup (mirrors your theme classes so animations apply) ----
 function tileHTML(r, i, verdict) {
   const vc = verdict ? verdictClass(verdict) : 'warn';
   const label = verdict ? verdictLabel(verdict) : 'Click AI';
   const owner = r.owner, name = r.name;
+  const click = `onclick="openDetail('${owner}','${name}')"`;
   if (i === 0) {
-    // featured full-width tile
     return `
-  <div class="tile featured" style="animation-delay:.04s">
+  <div class="tile featured" style="animation-delay:.04s" ${click} role="button">
     <span class="tag-top"><span class="star-ico">★</span> top pick</span>
     <div class="name"><span class="owner">${owner}/</span>${name}</div>
     <div class="desc">${r.description || 'No description available.'}</div>
     <div class="foot">
       <span class="stars">${starSvg}<b class="num">${fmtStars(r.stars)}</b></span>
       <span class="updated">updated ${fmtDate(r.updated_at)}</span>
-      <button class="badge ${vc}" style="cursor:pointer;border:none;font:inherit;" onclick="verifyRepo('${owner}','${name}',0)"><span class="sw"></span>${label}</button>
+      <button class="badge ${vc}" style="cursor:pointer;border:none;font:inherit;" onclick="event.stopPropagation();verifyRepo('${owner}','${name}',0)"><span class="sw"></span>${label}</button>
     </div>
   </div>`;
   }
-  // small tile
   return `
-  <div class="tile small" style="animation-delay:${(i*0.06).toFixed(2)}s">
+  <div class="tile small" style="animation-delay:${(i*0.06).toFixed(2)}s" ${click} role="button">
     <div class="top-row">
-      <div>
-        <div class="name"><span class="owner">${owner}/</span>${name}</div>
-      </div>
+      <div><div class="name"><span class="owner">${owner}/</span>${name}</div></div>
       <span class="rank">#${i+1}</span>
     </div>
     <div class="desc">${r.description || 'No description available.'}</div>
     <div class="foot">
       <span class="stars">${starSvg}<b class="num">${fmtStars(r.stars)}</b></span>
-      <button class="badge ${vc}" style="cursor:pointer;border:none;font:inherit;" onclick="verifyRepo('${owner}','${name}',${i})"><span class="sw"></span>${label}</button>
+      <button class="badge ${vc}" style="cursor:pointer;border:none;font:inherit;" onclick="event.stopPropagation();verifyRepo('${owner}','${name}',${i})"><span class="sw"></span>${label}</button>
     </div>
   </div>`;
 }
 
+// ---- AI verify -> popup with reasoning ----
 async function verifyRepo(owner, name, i) {
-  const btn = document.querySelector(`#rr-list .tile:nth-child(${i+1}) .badge`) || document.querySelectorAll('#rr-list .badge')[i];
+  const btn = document.querySelectorAll('#rr-list .badge')[i];
   if (!btn) return;
   const orig = btn.innerHTML;
   btn.innerHTML = '<span class="sw"></span>Checking…';
@@ -65,6 +64,7 @@ async function verifyRepo(owner, name, i) {
       btn.className = `badge ${vc}`;
       btn.style.cursor = 'pointer'; btn.style.border = 'none'; btn.style.font = 'inherit';
       btn.innerHTML = `<span class="sw"></span>${verdictLabel(d.verdict)}`;
+      showAIPopup(owner, name, d);
     } else {
       btn.innerHTML = orig;
       alert('AI unavailable: ' + (d.message || d.error || 'try again'));
@@ -74,7 +74,52 @@ async function verifyRepo(owner, name, i) {
   }
 }
 
-let debounce;
+function showAIPopup(owner, name, d) {
+  const vc = verdictClass(d.verdict);
+  const panel = document.getElementById('rr-overlay');
+  panel.querySelector('.overlay-card').className = `overlay-card ${vc}`;
+  panel.querySelector('#ov-title').innerHTML = `<span class="owner">${owner}/</span>${name}`;
+  panel.querySelector('#ov-verdict').className = `badge ${vc}`;
+  panel.querySelector('#ov-verdict').innerHTML = `<span class="sw"></span>${verdictLabel(d.verdict)}`;
+  panel.querySelector('#ov-reason').innerHTML = `
+    <div class="reason-row"><span class="rl">Maintained</span><span class="rv">${d.maintained || '—'}</span></div>
+    <div class="reason-row"><span class="rl">Maturity</span><span class="rv">${d.maturity || '—'}</span></div>
+    <div class="reason-row"><span class="rl">Setup</span><span class="rv">${d.setup || '—'}</span></div>
+    <div class="reason-full">${escapeHtml(d.summary || '')}</div>`;
+  panel.classList.add('open');
+}
+
+// ---- card click -> full detail panel ----
+async function openDetail(owner, name) {
+  const panel = document.getElementById('rr-detail');
+  panel.querySelector('#dt-title').innerHTML = `<span class="owner">${owner}/</span>${name}`;
+  panel.querySelector('#dt-body').innerHTML = '<div style="padding:30px;text-align:center;color:var(--ink-soft);font-family:JetBrains Mono;font-size:13px;">⟳ Loading…</div>';
+  panel.classList.add('open');
+  try {
+    const r = await fetch(`/api/repo/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`);
+    const d = await r.json();
+    const det = d.detail || {};
+    panel.querySelector('#dt-body').innerHTML = `
+      <div class="dt-stats">
+        <div><b>${fmtNum(det.stars||0)}</b><span>stars</span></div>
+        <div><b>${fmtNum(det.forks||0)}</b><span>forks</span></div>
+        <div><b>${det.language||'—'}</b><span>lang</span></div>
+        <div><b>${fmtDate(det.pushed_at)}</b><span>updated</span></div>
+      </div>
+      <p class="dt-desc">${det.description || 'No description.'}</p>
+      ${det.readme ? `<div class="dt-readme">${escapeHtml(det.readme.slice(0,1400))}</div>` : ''}
+      <div class="dt-actions">
+        <button class="badge warn" style="cursor:pointer;border:none;font:inherit;" onclick="verifyRepo('${owner}','${name}',0)"><span class="sw"></span>AI Check</button>
+        <a class="dt-link" href="${det.html_url||'#'}" target="_blank" rel="noopener">Open on GitHub →</a>
+      </div>`;
+  } catch (e) {
+    panel.querySelector('#dt-body').innerHTML = '<div style="padding:30px;color:var(--bad);">Failed to load details.</div>';
+  }
+}
+
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ---- search (manual button, NO auto-search) ----
 async function doSearch(q) {
   if (!q.trim()) return;
   const loading = document.getElementById('rr-loading');
@@ -99,24 +144,42 @@ async function doSearch(q) {
   }
 }
 
-// init (script is at end of <body>, DOM ready)
+// ---- overlay close ----
+function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+
+// ---- init ----
 (function init() {
   const input = document.getElementById('searchInput');
-  // build live results container that mirrors your .bento grid
+  const btn = document.getElementById('searchBtn');
+
   const wrap = document.createElement('div');
   wrap.innerHTML = `
     <div id="rr-loading" style="display:none;text-align:center;padding:40px;color:var(--ink-soft);font-family:'JetBrains Mono';font-size:13px;">⟳ Searching GitHub…</div>
     <div class="bento" id="rr-results" style="display:none;">
       <div id="rr-list" style="grid-column:1/-1;display:grid;grid-template-columns:repeat(2,1fr);gap:14px;"></div>
+    </div>
+
+    <div class="overlay" id="rr-detail">
+      <div class="overlay-inner">
+        <button class="overlay-close" onclick="closeOverlay('rr-detail')">×</button>
+        <h2 id="dt-title" class="dt-title"></h2>
+        <div id="dt-body"></div>
+      </div>
+    </div>
+
+    <div class="overlay" id="rr-overlay">
+      <div class="overlay-inner">
+        <button class="overlay-close" onclick="closeOverlay('rr-overlay')">×</button>
+        <h2 id="ov-title" class="dt-title"></h2>
+        <div id="ov-verdict" class="badge" style="margin:10px 0;"></div>
+        <div id="ov-reason" class="reason-box"></div>
+      </div>
     </div>`;
   const bento = document.querySelector('.bento');
   if (bento && bento.parentNode) bento.parentNode.insertBefore(wrap, bento.nextSibling);
 
-  if (input) {
-    input.addEventListener('input', () => {
-      clearTimeout(debounce);
-      debounce = setTimeout(() => doSearch(input.value), 450);
-    });
-    input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(input.value); });
-  }
+  const run = () => doSearch(input.value);
+  if (btn) btn.addEventListener('click', run);
+  if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+  // NO input/auto-search listener — manual only
 })();

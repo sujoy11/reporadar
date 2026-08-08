@@ -5,12 +5,12 @@ import os
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from routes import search, verify, cron
+from routes import search, verify, cron, repo
 
 app = FastAPI(title="RepoRadar")
 app.include_router(search.router)
 app.include_router(verify.router)
-app.include_router(cron.router)
+app.include_router(repo.router)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 

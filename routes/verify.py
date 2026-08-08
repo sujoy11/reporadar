@@ -34,11 +34,22 @@ async def verify(owner: str = "", name: str = ""):
     except RuntimeError as e:
         return {"error": "ai_unavailable", "message": str(e)}
 
-    # 4) parse verdict line
+    # 4) parse structured fields from the AI text
     verdict = "Needs Caution ⚠️"
+    maintained = ""
+    maturity = ""
+    setup = ""
     for line in text.splitlines():
-        if "VERDICT" in line.upper():
+        u = line.upper()
+        if "VERDICT" in u:
             verdict = line.split(":", 1)[-1].strip() or verdict
+        elif "MAINTAINED" in u:
+            maintained = line.split("?", 1)[-1].strip()
+        elif "MATURITY" in u:
+            maturity = line.split(":", 1)[-1].strip()
+        elif "SETUP" in u:
+            setup = line.split(":", 1)[-1].strip()
     db.set_verified(owner, name, verdict, text, provider, detail.get("stars", 0))
     return {"source": "live", "owner": owner, "name": name,
-            "verdict": verdict, "summary": text, "ai_provider": provider}
+            "verdict": verdict, "summary": text, "ai_provider": provider,
+            "maintained": maintained, "maturity": maturity, "setup": setup}
