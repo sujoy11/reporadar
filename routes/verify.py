@@ -34,7 +34,7 @@ async def verify(owner: str = "", name: str = ""):
     except RuntimeError as e:
         return {"error": "ai_unavailable", "message": str(e)}
 
-    # 4) parse structured fields from the AI text
+    # 4) parse structured fields from the AI text (match numbered lines 1-5)
     import re as _re
     verdict = "Needs Caution ⚠️"
     maintained = ""
@@ -44,18 +44,19 @@ async def verify(owner: str = "", name: str = ""):
     def clean(s):
         s = _re.sub(r'^\s*\d+\.\s*', '', s)         # strip "1. "
         s = _re.sub(r'\*\*', '', s)                  # strip bold
+        s = _re.sub(r'^(MAINTAINED|MATURITY|SETUP|REASONING)\s*:\s*', '', s, flags=_re.I)  # strip label
         return s.strip()
     for line in text.splitlines():
         u = line.upper()
-        if "VERDICT" in u:
+        if u.startswith("4") or (u.startswith("1") and "MAINTAINED" in u) or "VERDICT:" in u:
             verdict = clean(line.split(":", 1)[-1]) or verdict
-        elif "MAINTAINED" in u:
-            maintained = clean(line.split("?", 1)[-1] or line.split(":", 1)[-1])
-        elif "MATURITY" in u:
+        elif u.startswith("1") and "MAINTAINED:" in u:
+            maintained = clean(line.split(":", 1)[-1])
+        elif u.startswith("2") and "MATURITY:" in u:
             maturity = clean(line.split(":", 1)[-1])
-        elif "SETUP" in u:
+        elif u.startswith("3") and "SETUP:" in u:
             setup = clean(line.split(":", 1)[-1])
-        elif "REASONING" in u:
+        elif u.startswith("5") and "REASONING:" in u:
             reasoning = clean(line.split(":", 1)[-1])
     db.set_verified(owner, name, verdict, text, provider, detail.get("stars", 0))
     return {"source": "live", "owner": owner, "name": name,
