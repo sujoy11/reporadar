@@ -73,7 +73,11 @@ async function doSearch(q) {
     if (d.error) { alert(d.message || d.error); return; }
     const list = d.results || [];
     document.getElementById('rr-count').textContent = list.length;
-    document.getElementById('rr-list').innerHTML = list.map((x, i) => cardHTML(x, i)).join('');
+    if (list.length === 0) {
+      document.getElementById('rr-list').innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink-soft);font-size:14px;">No repos found for that term.<br>Try a simpler query (e.g. "poco custom rom").</div>';
+    } else {
+      document.getElementById('rr-list').innerHTML = list.map((x, i) => cardHTML(x, i)).join('');
+    }
     results.style.display = 'block';
     document.querySelectorAll('#rr-list .card').forEach(c => c.classList.add('in-view'));
   } catch (e) {

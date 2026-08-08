@@ -186,6 +186,10 @@
     .ring-wrap .rank-txt{ font-size:10.5px; }
     .stat{ padding:0 14px; }
   }
+  /* mobile full-width: remove centered max-width + side padding so no gap */
+  @media (max-width:600px){
+    .hero, .results-wrap{ max-width:100%; padding-left:16px; padding-right:16px; }
+  }
   @media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important; } .card{ opacity:1; transform:none; } }
 </style>
 </head>
