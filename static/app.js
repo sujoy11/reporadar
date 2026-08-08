@@ -85,10 +85,10 @@ function showAIPopup(owner, name, d) {
     <div class="reason-row"><span class="rl">Maintained</span><span class="rv">${d.maintained || '—'}</span></div>
     <div class="reason-row"><span class="rl">Maturity</span><span class="rv">${d.maturity || '—'}</span></div>
     <div class="reason-row"><span class="rl">Setup</span><span class="rv">${d.setup || '—'}</span></div>
-    <div class="reason-why ${vc}">
+    ${d.reasoning ? `<div class="reason-why ${vc}">
       <span class="why-label">${whyPrefix(d.verdict)}</span>
-      <p>${escapeHtml(d.reasoning || d.summary || 'No detailed reasoning available.')}</p>
-    </div>`;
+      <p>${escapeHtml(d.reasoning)}</p>
+    </div>` : ''}`;
   panel.classList.add('open');
 }
 
