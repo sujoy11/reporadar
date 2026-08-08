@@ -88,7 +88,7 @@ function showAIPopup(owner, name, d) {
       <span class="why-label">${whyPrefix(d.verdict)}</span>
       <p>${escapeHtml(d.reasoning)}</p>
     </div>` : ''}`;
-  panel.classList.add('open');
+  openOverlay('rr-overlay');
 }
 
 // ---- card click -> full detail panel ----
@@ -96,7 +96,7 @@ async function openDetail(owner, name) {
   const panel = document.getElementById('rr-detail');
   panel.querySelector('#dt-title').innerHTML = `<span class="owner">${owner}/</span>${name}`;
   panel.querySelector('#dt-body').innerHTML = '<div style="padding:30px;text-align:center;color:var(--ink-soft);font-family:JetBrains Mono;font-size:13px;">⟳ Loading…</div>';
-  panel.classList.add('open');
+  openOverlay('rr-detail');
   try {
     const r = await fetch(`/api/repo/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`);
     const d = await r.json();
@@ -146,8 +146,14 @@ async function doSearch(q) {
   }
 }
 
-// ---- overlay close ----
-function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+// ---- overlay open/close with body scroll-lock ----
+function openOverlay(id){ document.body.style.overflow = 'hidden'; document.getElementById(id).classList.add('open'); }
+function closeOverlay(id){
+  document.getElementById(id).classList.remove('open');
+  // only unlock body if NO other overlay is still open
+  const anyOpen = document.querySelector('.overlay.open');
+  if (!anyOpen) document.body.style.overflow = '';
+}
 
 // ---- init ----
 (function init() {
