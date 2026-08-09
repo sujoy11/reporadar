@@ -25,7 +25,10 @@
     --warn:#C9820A; --warn-soft:#FCF1DD;
     --bad:#DD463D;  --bad-soft:#FCEAE8;
   }
-  *{ box-sizing:border-box; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; tap-highlight-color:transparent; }
+  html{ -webkit-tap-highlight-color:transparent; }
+  button, a, input, [onclick]{ -webkit-tap-highlight-color:transparent; outline:none; }
+  button:focus, a:focus{ outline:none; }
   body{
     margin:0; background:var(--paper); color:var(--ink);
     font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
@@ -78,26 +81,40 @@
   .search input::placeholder{ color:var(--ink-faint); }
 
   .search-go{
-    flex:none; width:44px; height:44px; border-radius:12px; border:none; cursor:pointer;
+    position:relative; flex:none; width:44px; height:44px; border-radius:12px; border:none; cursor:pointer;
     background:linear-gradient(135deg,var(--brand),var(--violet)); color:#fff;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 10px 22px -10px rgba(52,84,255,.55);
     transition:transform .12s cubic-bezier(.3,1.5,.5,1), box-shadow .15s ease;
+    isolation:isolate;
+  }
+  .search-go::before{
+    content:''; position:absolute; inset:-5px; border-radius:15px; z-index:-1;
+    background:conic-gradient(from 0deg, var(--brand), var(--violet), var(--brand));
+    opacity:.32; filter:blur(7px);
+    animation:halo-spin 3.4s linear infinite;
+  }
+  @keyframes halo-spin{ to{ transform:rotate(360deg); } }
+  .search-go::after{
+    content:''; position:absolute; inset:0; border-radius:12px; pointer-events:none;
+    box-shadow:0 0 0 0 rgba(52,84,255,0); opacity:0;
+  }
+  .search-go.searching::after{ animation:go-shock .55s cubic-bezier(.2,.8,.2,1); }
+  @keyframes go-shock{
+    0%{ box-shadow:0 0 0 0 rgba(52,84,255,.4); opacity:1; }
+    100%{ box-shadow:0 0 0 16px rgba(139,92,246,0); opacity:0; }
   }
   .search-go:hover{ box-shadow:0 12px 26px -8px rgba(52,84,255,.65); transform:translateY(-1px); }
+  .search-go:hover::before{ opacity:.5; }
   .search-go:active{ transform:scale(.9); }
-  .search-go svg{ transition:transform .35s cubic-bezier(.3,1.6,.4,1); }
+  .search-go svg{ transition:transform .35s cubic-bezier(.3,1.6,.4,1); position:relative; }
   .search-go:hover svg{ transform:scale(1.12) rotate(-8deg); }
-  .search-go.searching svg{ animation:go-search .5s ease; }
+  .search-go.searching svg{ animation:go-search .5s cubic-bezier(.3,1.4,.3,1); }
   @keyframes go-search{
     0%{ transform:scale(1) rotate(0); }
-    35%{ transform:scale(.8) rotate(-14deg); }
+    30%{ transform:scale(.72) rotate(-18deg); }
+    60%{ transform:scale(1.15) rotate(4deg); }
     100%{ transform:scale(1) rotate(0); }
-  }
-  .search-go.searching{ animation:go-ripple .5s ease; }
-  @keyframes go-ripple{
-    0%{ box-shadow:0 10px 22px -10px rgba(52,84,255,.55), 0 0 0 0 rgba(52,84,255,.45); }
-    100%{ box-shadow:0 10px 22px -10px rgba(52,84,255,.55), 0 0 0 12px rgba(52,84,255,0); }
   }
 
   .particle{
@@ -129,11 +146,13 @@
     position:relative;
     display:flex; align-items:center; gap:14px;
     background:var(--card); border:1px solid var(--line); border-radius:16px;
-    padding:14px 16px 14px 18px; margin-bottom:10px; cursor:pointer;
+    padding:15px 17px 15px 19px; margin-bottom:11px; cursor:pointer;
     opacity:0; transform:translateY(10px);
     animation:rise .4s cubic-bezier(.2,.8,.2,1) forwards;
     transition:border-color .18s ease, box-shadow .18s ease, transform .15s ease;
     overflow:hidden;
+    -webkit-tap-highlight-color:transparent; tap-highlight-color:transparent;
+    user-select:none; -webkit-user-select:none;
   }
   .row::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:3px; }
   .row[data-hue="blue"]::before{ background:var(--brand); }
@@ -141,18 +160,37 @@
   .row[data-hue="teal"]::before{ background:var(--teal); }
   .row[data-hue="coral"]::before{ background:var(--coral); }
   .row:hover{ border-color:var(--line); box-shadow:0 14px 28px -20px rgba(20,18,10,.22); transform:translateY(-2px); }
+  .row:active{ transform:scale(.97); }
+  .row::after{
+    content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    box-shadow:0 0 0 0 rgba(52,84,255,0); opacity:0;
+  }
+  .row.tapped::after{ animation:row-glow .4s ease; }
+  @keyframes row-glow{
+    0%{ box-shadow:0 0 0 0 rgba(52,84,255,.3); opacity:1; }
+    100%{ box-shadow:0 0 0 16px rgba(52,84,255,0); opacity:0; }
+  }
   @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
 
   .rank{ font-weight:800; font-size:12px; color:var(--ink-faint); background:var(--paper); padding:4px 9px; border-radius:7px; flex:none; }
 
   .row-main{ flex:1; min-width:0; }
-  .name{ font-weight:700; font-size:14.5px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .name{ font-weight:700; font-size:15px; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .name .owner{ color:var(--ink-soft); font-weight:500; }
-  .meta{ display:flex; align-items:center; gap:10px; margin-top:4px; }
+  .row-desc{
+    font-size:12px; color:var(--ink-soft); margin-top:3px; line-height:1.4;
+    display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .meta{ display:flex; align-items:center; gap:10px; margin-top:6px; flex-wrap:wrap; }
   .stars{ display:flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:var(--ink); }
   .stars svg{ width:11px; height:11px; color:var(--gold); }
+  .forks{ display:flex; align-items:center; gap:4px; font-size:11.5px; font-weight:600; color:var(--ink-soft); }
+  .forks svg{ width:11px; height:11px; }
   .upd{ font-size:11.5px; color:var(--ink-faint); }
   .lang-chip{ font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; }
+
+  .chevron{ flex:none; color:var(--ink-faint); transition:transform .15s ease, color .15s ease; }
+  .row:hover .chevron{ transform:translateX(3px); color:var(--brand); }
 
   .save-btn{
     flex:none; border:none; background:none; cursor:pointer; color:var(--ink-faint); padding:6px;
@@ -385,9 +423,13 @@
   const API_BASE = "https://reporadar-backend.onrender.com";
   let repos = [];
 
-  // map backend search result -> same shape used by openDetail/runVerify
   const HUES = ['blue','violet','coral','teal','blue','violet','coral','teal'];
   function fmtStars(n){
+    n = Number(n)||0;
+    if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+    return String(n);
+  }
+  function fmtForks(n){
     n = Number(n)||0;
     if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
     return String(n);
@@ -401,49 +443,63 @@
     if (d < 31536000) return Math.round(d/2592000) + 'mo ago';
     return Math.round(d/31536000) + 'y ago';
   }
+  function langColor(lang){
+    if (!lang || lang === 'Unknown') return 'background:#EFEFEA;color:var(--ink-faint);';
+    const map = { 'C':'var(--brand-soft);color:var(--brand);', 'Shell':'var(--violet-soft);color:var(--violet);', 'Python':'#FFEDE6;color:var(--coral);', 'Kotlin':'#E1F7F5;color:var(--teal);', 'Java':'var(--brand-soft);color:var(--brand);', 'JavaScript':'var(--gold-soft,#FCF1DD);color:var(--gold);' };
+    return map[lang] || 'var(--brand-soft);color:var(--brand);';
+  }
   async function loadRepos(q){
     q = (q||'').trim();
     if (q.length < 1) return;
-    const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}`);
-    if (!res.ok) throw new Error('search failed');
-    const data = await res.json();
-    const items = (data && data.results) || [];
-    repos = items.slice(0, 24).map((r, i) => ({
-      owner: (r.owner ? r.owner + '/' : ''),
-      name: r.name,
-      desc: r.description || 'No description provided.',
-      stars: fmtStars(r.stars),
-      forks: fmtStars(r.forks),
-      updated: relTime(r.updated_at),
-      language: r.language || '',
-      verdict: 'good',
-      summary: '',
-      url: r.url || ('https://github.com/' + (r.owner||'') + '/' + (r.name||'')),
-      _owner: r.owner,
-      _name: r.name,
-      hue: HUES[i % HUES.length]
-    }));
-    renderRows();
+    try {
+      const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}`);
+      if (!res.ok) throw new Error('search failed');
+      const data = await res.json();
+      const items = (data && data.results) || [];
+      repos = items.slice(0, 24).map((r, i) => ({
+        owner: (r.owner ? r.owner + '/' : ''),
+        name: r.name,
+        desc: r.description || 'No description provided.',
+        stars: fmtStars(r.stars),
+        forks: fmtForks(r.forks),
+        updated: relTime(r.updated_at),
+        language: r.language || '',
+        verdict: 'good',
+        summary: '',
+        url: r.url || ('https://github.com/' + (r.owner||'') + '/' + (r.name||'')),
+        _owner: r.owner,
+        _name: r.name,
+        hue: HUES[i % HUES.length]
+      }));
+      renderRows();
+    } catch(e){
+      const wrap = document.getElementById('rows');
+      if (wrap) wrap.innerHTML = '<p style="color:var(--ink-soft);font-size:13px;padding:20px 4px;">Could not load results. Please try again.</p>';
+    }
   }
 
   function renderRows(){
     const wrap = document.getElementById('rows');
     if (!wrap) return;
+    if (!repos.length){ wrap.innerHTML = ''; const c=document.querySelector('.list-head .count'); if(c) c.innerHTML='<b>0</b> repos found'; return; }
     wrap.innerHTML = repos.map((r, i) => `
-      <div class="row" data-hue="${r.hue}" style="animation-delay:${i*0.06}s" onclick="openDetail(${i})">
+      <div class="row" data-hue="${r.hue}" style="animation-delay:${i*0.06}s" onclick="openDetail(${i}, event)">
         <span class="rank">#${i+1}</span>
         <div class="row-main">
           <div class="name"><span class="owner">${r.owner}</span>${r.name}</div>
+          <p class="row-desc">${r.desc}</p>
           <div class="meta">
             <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>${r.stars}</span>
+            <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>${r.forks}</span>
             <span class="upd">· ${r.updated}</span>
-            <span class="lang-chip" style="background:var(--brand-soft);color:var(--brand);">${r.language || '—'}</span>
+            <span class="lang-chip" style="background:${langColor(r.language)}">${r.language || 'Unknown'}</span>
           </div>
         </div>
         <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
       </div>`).join('');
-    const countEl = document.querySelector('.list-head .count');
-    if (countEl) countEl.innerHTML = `<b>${repos.length}</b> repos found`;
+    const c = document.querySelector('.list-head .count');
+    if (c) c.innerHTML = `<b>${repos.length}</b> repos found`;
   }
 
   repos.forEach(r => { r.url = 'https://github.com/' + r.owner.replace(/\/$/, '') + '/' + r.name; });
@@ -452,7 +508,13 @@
   const overlay = document.getElementById('overlay');
   const backBtn = document.getElementById('backBtn');
 
-  function openDetail(i){
+  function openDetail(i, ev){
+    if (ev && ev.currentTarget){
+      const el = ev.currentTarget;
+      el.classList.remove('tapped');
+      void el.offsetWidth;
+      el.classList.add('tapped');
+    }
     currentRepo = repos[i];
     document.getElementById('dOwner').textContent = currentRepo.owner;
     document.getElementById('dName').textContent = currentRepo.name;
@@ -468,9 +530,31 @@
 
     showPanel('detail');
     overlay.classList.add('open');
+    lockScroll();
   }
 
-  function closeModal(){ overlay.classList.remove('open'); }
+  let scrollY = 0;
+  function lockScroll(){
+    scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = -scrollY + 'px';
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+  }
+  function unlockScroll(){
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    window.scrollTo(0, scrollY);
+  }
+
+  function closeModal(){
+    overlay.classList.remove('open');
+    unlockScroll();
+  }
 
   function showPanel(which){
     document.getElementById('panelDetail').classList.toggle('active', which === 'detail');
@@ -497,7 +581,7 @@
       .then(v => {
         loading.style.display = 'none';
         const raw = (v.verdict || '').toString().toLowerCase();
-        const key = raw.includes('outdat') ? 'bad' : raw.includes('caution') || raw.includes('warn') ? 'warn' : 'good';
+        const key = raw.includes('outdat') ? 'bad' : (raw.includes('caution') || raw.includes('warn')) ? 'warn' : 'good';
         const label = key === 'good' ? 'Working' : key === 'warn' ? 'Needs caution' : 'Outdated';
         badge.className = 'ai-verdict-badge ' + key;
         badge.innerHTML = '<span class="sw"></span>' + label;
@@ -518,6 +602,7 @@
     void btn.offsetWidth;
     btn.classList.add('searching');
     spawnParticles(btn);
+    setTimeout(() => btn.classList.remove('searching'), 500);
     const inp = document.querySelector('.search input');
     if (inp) loadRepos(inp.value);
   }
@@ -526,22 +611,23 @@
     const rect = btn.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
-    const colors = ['#3454FF','#8B5CF6','#22C55E','#F59E0B','#EC4899','#06B6D4'];
-    const count = 10;
+    const colors = ['#3454FF','#8B5CF6'];
+    const count = 6;
     for (let i = 0; i < count; i++){
       const p = document.createElement('div');
       p.className = 'particle';
-      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-      const dist = 34 + Math.random() * 22;
+      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
+      const dist = 26 + Math.random() * 14;
       const px = Math.cos(angle) * dist;
       const py = Math.sin(angle) * dist;
       p.style.setProperty('--px', px + 'px');
       p.style.setProperty('--py', py + 'px');
       p.style.left = cx + 'px';
       p.style.top = cy + 'px';
+      p.style.width = p.style.height = (3.5 + Math.random() * 2) + 'px';
       p.style.background = colors[i % colors.length];
       document.body.appendChild(p);
-      setTimeout(() => p.remove(), 650);
+      setTimeout(() => p.remove(), 600);
     }
   }
 
@@ -552,7 +638,7 @@
     btn.classList.add('pop');
   }
 
-  // backend wiring: Enter key triggers search; load a default query on open
+  // backend wiring: Enter triggers search; load default query on open
   (function(){
     const inp = document.querySelector('.search input');
     if (inp){
@@ -560,7 +646,6 @@
     }
     loadRepos('termux');
   })();
-
 </script>
 
 </body>
