@@ -229,4 +229,40 @@ function closeOverlay(id){
   if (btn) btn.addEventListener('click', run);
   if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
   // NO input/auto-search listener — manual only
+
+  // ---- MotionSites-inspired enhancements ----
+  // 1) Scroll-reveal via IntersectionObserver
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        en.target.classList.add('in');
+        // 2) count-up when stats enter view
+        en.target.querySelectorAll('[data-count]').forEach(runCountUp);
+        io.unobserve(en.target);
+      }
+    });
+  }, { threshold: 0.18 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  function runCountUp(el) {
+    const target = parseFloat(el.getAttribute('data-count'));
+    const suffix = el.getAttribute('data-suffix') || '';
+    const dur = 1100; const t0 = performance.now();
+    function step(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      el.textContent = Math.round(target * eased) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // 3) cursor-follow glow on tiles (uses existing --mx/--my vars)
+  document.addEventListener('mousemove', e => {
+    const tile = e.target.closest('.tile');
+    if (!tile) return;
+    const r = tile.getBoundingClientRect();
+    tile.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+    tile.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  });
 })();

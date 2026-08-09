@@ -25,7 +25,24 @@
   body{
     margin:0; background:var(--paper); color:var(--ink);
     font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;
+    position:relative; overflow-x:hidden;
   }
+  /* subtle animated gradient backdrop (MotionSites-inspired, CSS-only) */
+  body::before{
+    content:''; position:fixed; inset:-30% -30% auto -30%; height:120vh; z-index:-1;
+    background:
+      radial-gradient(50% 40% at 20% 10%, rgba(52,84,255,.10), transparent 70%),
+      radial-gradient(45% 40% at 85% 18%, rgba(138,92,255,.09), transparent 70%),
+      radial-gradient(40% 35% at 60% 0%, rgba(14,154,84,.06), transparent 70%);
+    filter:blur(8px);
+    animation:drift 18s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    0%{ transform:translate3d(0,0,0) scale(1); }
+    50%{ transform:translate3d(3%,2%,0) scale(1.06); }
+    100%{ transform:translate3d(-2%,-1%,0) scale(1.03); }
+  }
+  @media (prefers-reduced-motion: reduce){ body::before{ animation:none; } }
   ::selection{ background:var(--brand); color:#fff; }
 
   header{
@@ -63,6 +80,19 @@
     opacity:0; animation:fade-up .7s ease .25s forwards;
   }
   @keyframes fade-up{ from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:translateY(0); } }
+
+  /* scroll-reveal (MotionSites-inspired) */
+  .reveal{ opacity:0; transform:translateY(22px); transition:opacity .7s cubic-bezier(.2,.8,.2,1), transform .7s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in{ opacity:1; transform:none; }
+
+  /* cursor-follow glow on cards */
+  .tile{ transition:transform .25s ease, box-shadow .25s ease, border-color .2s ease; }
+  .tile::after{
+    content:''; position:absolute; inset:0; border-radius:18px; pointer-events:none; opacity:0;
+    background:radial-gradient(180px 180px at var(--mx,50%) var(--my,50%), rgba(52,84,255,.10), transparent 70%);
+    transition:opacity .25s ease;
+  }
+  .tile:hover::after{ opacity:1; }
 
   .search{
     display:flex; align-items:center; gap:9px;
@@ -337,23 +367,23 @@
     <button id="searchBtn" type="button" aria-label="Search">Search</button>
   </div>
 
-  <section class="rr4-section" aria-label="RepoRadar stats and process">
+  <section class="rr4-section reveal" aria-label="RepoRadar stats and process">
     <div class="rr4-inner">
 
       <!-- STATS -->
       <div class="rr4-stats" role="list">
         <div class="rr4-stat" role="listitem">
-          <span class="rr4-stat__value">200M</span>
+          <span class="rr4-stat__value" data-count="200" data-suffix="M">0M</span>
           <span class="rr4-stat__rule"></span>
           <span class="rr4-stat__label">GitHub Repos Indexed</span>
         </div>
         <div class="rr4-stat" role="listitem">
-          <span class="rr4-stat__value">13M</span>
+          <span class="rr4-stat__value" data-count="13" data-suffix="M">0M</span>
           <span class="rr4-stat__rule"></span>
           <span class="rr4-stat__label">Developers Searching</span>
         </div>
         <div class="rr4-stat rr4-stat--verified" role="listitem">
-          <span class="rr4-stat__value">100%</span>
+          <span class="rr4-stat__value" data-count="100" data-suffix="%">0%</span>
           <span class="rr4-stat__rule"></span>
           <span class="rr4-stat__label">AI-Verified Results</span>
         </div>
