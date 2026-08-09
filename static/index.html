@@ -415,6 +415,7 @@
       stars: fmtStars(r.stars),
       forks: fmtStars(r.forks),
       updated: relTime(r.updated_at),
+      language: r.language || '',
       verdict: 'good',
       summary: '',
       url: r.url || ('https://github.com/' + (r.owner||'') + '/' + (r.name||'')),
