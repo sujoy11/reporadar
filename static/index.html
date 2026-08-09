@@ -249,10 +249,14 @@
 
   .signal-card{
     background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
-    padding:26px 22px; position:relative; overflow:hidden;
+    padding:26px 22px; position:relative; overflow:visible;
     transition:transform .3s ease, border-color .3s ease;
   }
   .signal-card:hover{transform:translateY(-5px);}
+  /* backend-wired: expanded AI details should not be clipped */
+  .signal-card .ai-out{ width:100%; margin-top:12px; }
+  .signal-card .ai-out .terminal{ width:100%; }
+  .signal-card.open{ z-index:5; }
   .signal-card::before{
     content:''; position:absolute; top:-40%; right:-40%; width:70%; height:70%;
     border-radius:50%; filter:blur(40px); opacity:0.25; transition:opacity .3s;
@@ -417,8 +421,7 @@
       <div class="search-mock">
         <div class="search-box">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          <input id="searchInput" type="text" class="typed" autocomplete="off" placeholder="custom rom for poco" style="background:none;border:none;outline:none;color:var(--text);width:100%;" />
-          <span class="typed-ghost" style="display:none;">custom rom for poco</span>
+          <input id="searchInput" type="text" autocomplete="off" placeholder="custom rom for poco" style="background:none;border:none;outline:none;color:var(--text);width:100%;font-family:'JetBrains Mono',monospace;font-size:14.5px;flex:1;min-width:0;" />
         </div>
         <div class="search-hint">
           <span><b>1,842</b> matches</span>
@@ -652,11 +655,11 @@
   const resultsKicker = document.getElementById('resultsKicker');
   const resultsTitle = document.getElementById('resultsTitle');
 
-  // hide fake .typed animation once user focuses/types
-  if (searchInput) {
-    searchInput.addEventListener('focus', () => {
-      const ghost = document.querySelector('.typed-ghost');
-      if (ghost) ghost.style.display = 'none';
+  // Bug 2 fix: whole search box clickable -> focus input
+  const searchBox = document.querySelector('.search-box');
+  if (searchBox && searchInput) {
+    searchBox.addEventListener('click', (e) => {
+      if (e.target !== searchInput) { searchInput.focus(); }
     });
   }
 
@@ -721,6 +724,7 @@
     const owner = btn.getAttribute('data-owner');
     const name = btn.getAttribute('data-name');
     const out = btn.parentElement.querySelector('.ai-out');
+    const card = btn.closest('.signal-card');
     btn.disabled = true;
     btn.textContent = 'Analyzing…';
     try {
@@ -751,6 +755,7 @@
           ${v.ai_provider ? `<div class="term-row" style="margin-top:10px;"><span>AI provider</span><b>${esc(v.ai_provider)}</b></div>` : ''}
         </div></div>`;
       btn.textContent = 'AI Details ✓';
+      if (card) card.classList.add('open');
     } catch (e) {
       btn.textContent = 'Get AI Details →';
       btn.disabled = false;
