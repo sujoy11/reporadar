@@ -122,7 +122,16 @@
     font-weight:700; font-size:13px;
     box-shadow:0 10px 22px -10px rgba(52,84,255,.5);
     transition:transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, background-position .5s ease;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
   }
+  .btn-spinner{
+    display:none; width:14px; height:14px; border-radius:50%;
+    border:2px solid rgba(255,255,255,.4); border-top-color:#fff;
+    animation:spin .6s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .url-verify-btn.loading .btn-spinner{ display:inline-block; }
+  .url-verify-btn.loading{ opacity:.85; pointer-events:none; }
   .url-verify-btn:hover{ box-shadow:0 12px 26px -8px rgba(52,84,255,.6); transform:translateY(-1px); background-position:100% 0%; }
   .url-verify-btn:active{ transform:scale(.94); }
   .url-verify-btn::after{
@@ -411,7 +420,10 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         <input type="text" id="directUrlInput" placeholder="https://github.com/owner/repo">
       </div>
-      <button class="url-verify-btn" onclick="verifyDirectUrl()">Verify</button>
+      <button class="url-verify-btn" id="urlVerifyBtn" onclick="verifyDirectUrl()">
+        <span class="btn-spinner" id="urlVerifySpinner"></span>
+        <span id="urlVerifyLabel">Verify</span>
+      </button>
     </div>
   </div>
 </div>
@@ -746,30 +758,58 @@
     const url = input.value.trim();
     if (!url) { input.focus(); return; }
 
-    const btn = document.querySelector('.url-verify-btn');
+    const btn = document.getElementById('urlVerifyBtn');
+    const label = document.getElementById('urlVerifyLabel');
     if (btn){
       btn.classList.remove('verifying');
       void btn.offsetWidth;
-      btn.classList.add('verifying');
-      setTimeout(() => btn.classList.remove('verifying'), 550);
+      btn.classList.add('verifying', 'loading');
+      label.textContent = 'Verifying…';
     }
 
     // remove any prior inline error
-    let errEl = document.getElementById('urlVerifyError');
-    if (errEl) errEl.remove();
+    let prevErr = document.getElementById('urlVerifyError');
+    if (prevErr) prevErr.remove();
 
+    function stopLoading(){
+      if (btn){ btn.classList.remove('loading'); label.textContent = 'Verify'; }
+    }
     function showError(msg){
       let e = document.getElementById('urlVerifyError');
       if (!e){
         e = document.createElement('div');
         e.id = 'urlVerifyError';
         e.style.cssText = 'font-size:12px;font-weight:600;color:var(--bad);margin-top:8px;text-align:left;';
-        const row = document.querySelector('.url-verify-row');
-        if (row && row.parentNode) row.parentNode.appendChild(e);
       }
       e.textContent = msg;
+      const row = document.querySelector('.url-verify-row');
+      if (row && row.parentNode && !e.parentNode) row.parentNode.appendChild(e);
     }
 
+    // 1. validate immediately
+    if (!/github\.com\/[^\/\s]+\/[^\/\s?#]+/.test(url)){
+      stopLoading();
+      showError('Please paste a valid github.com/owner/repo link.');
+      return;
+    }
+
+    // 2. open modal IMMEDIATELY with loading skeleton, before network
+    currentRepo = { owner:'github.com/', name:'…', desc:'Loading repository details…', stars:'—', forks:'—', updated:'—', url:'#' };
+    document.getElementById('dOwner').textContent = 'github.com/';
+    document.getElementById('dName').textContent = 'loading…';
+    document.getElementById('dDesc').textContent = 'Fetching repository details from GitHub…';
+    document.getElementById('dStars').textContent = '—';
+    document.getElementById('dForks').textContent = '—';
+    document.getElementById('dUpdated').textContent = '—';
+    document.getElementById('dOpenRepo').href = '#';
+    // show AI loading skeleton in detail panel too
+    document.getElementById('aiLoading').style.display = 'flex';
+    document.getElementById('aiResult').classList.remove('show');
+    showPanel('detail');
+    overlay.classList.add('open');
+    lockScroll();
+
+    // 3. background fetch
     fetch('/api/verify-url', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -777,6 +817,7 @@
     })
       .then(r => r.json().then(j => ({ ok:r.ok, j })))
       .then(({ ok, j }) => {
+        stopLoading();
         if (!ok || j.error){
           if (j.error === 'invalid_url' || j.error === 'empty_url')
             showError('Please paste a valid github.com/owner/repo link.');
@@ -788,15 +829,26 @@
             showError('Something went wrong, please try again.');
           return;
         }
-        // assign to repos and reuse openDetail() exactly (sets dOwner/dName/dDesc/dStars/dForks/dUpdated/dOpenRepo + opens modal + lockScroll)
-        repos.push(j);
-        openDetail(repos.length - 1, { currentTarget:null });
-        // reset AI panel then run verify
-        document.getElementById('aiLoading').style.display = 'flex';
-        document.getElementById('aiResult').classList.remove('show');
-        runVerify();
+        // 4. populate modal fields
+        currentRepo = {
+          owner: j.owner, name: j.name, desc: j.desc,
+          stars: j.stars, forks: j.forks, updated: j.updated, url: j.url,
+          verdict: j.verdict, summary: j.summary,
+          _owner: j.owner.replace(/\/$/,''), _name: j.name,
+          url: j.url
+        };
+        document.getElementById('dOwner').textContent = j.owner;
+        document.getElementById('dName').textContent = j.name;
+        document.getElementById('dDesc').textContent = j.desc;
+        document.getElementById('dStars').textContent = j.stars;
+        document.getElementById('dForks').textContent = j.forks;
+        document.getElementById('dUpdated').textContent = j.updated;
+        document.getElementById('dOpenRepo').href = j.url;
       })
-      .catch(() => showError('Network error, please try again.'));
+      .catch(() => {
+        stopLoading();
+        showError('Network error, please try again.');
+      });
   }
 
   function pulseSearch(btn){
@@ -805,8 +857,6 @@
     btn.classList.add('searching');
     spawnParticles(btn);
     setTimeout(() => btn.classList.remove('searching'), 500);
-    const inp = document.querySelector('.search input');
-    if (inp) loadRepos(inp.value);
   }
 
   function spawnParticles(btn){
