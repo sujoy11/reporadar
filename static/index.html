@@ -727,9 +727,11 @@
       const res = await fetch(`${API_BASE}/api/verify?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(name)}`);
       if (!res.ok) throw new Error('bad');
       const v = await res.json();
-      const verdict = v.verdict || 'caution';
-      const col = verdictColor[verdict] || 'var(--amber)';
-      const ic = verdictIcon[verdict] || '⚠️';
+      const rawVerdict = (v.verdict || '').toString().toLowerCase();
+      const vkey = rawVerdict.includes('outdat') ? 'outdated' : rawVerdict.includes('caution') || rawVerdict.includes('warn') ? 'caution' : 'working';
+      const verdict = vkey;
+      const col = verdictColor[verdict] || 'var(--green)';
+      const ic = verdictIcon[verdict] || '✅';
       const rawSummary = v.summary || '';
       const summaryRows = rawSummary.split('\n').map(l => l.trim()).filter(Boolean).map(line => {
         const idx = line.indexOf(':');
@@ -744,7 +746,7 @@
         <div class="term-bar"><span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
           <span>${esc(owner)}/${esc(name)} — AI verdict</span></div>
         <div class="term-body">
-          <div class="term-badge" style="background:rgba(0,224,164,0.12); color:${col}; margin-top:0;">${ic} ${esc(verdict.toUpperCase())}</div>
+          <div class="term-badge" style="background:${verdict==='working'?'rgba(0,224,164,0.12)':verdict==='caution'?'rgba(255,182,72,0.12)':'rgba(255,79,160,0.12)'}; color:${col}; margin-top:0;">${ic} ${verdict==='working'?'WORKING':verdict==='caution'?'NEEDS CAUTION':'OUTDATED'}</div>
           <div style="margin-top:12px;">${summaryRows}</div>
           ${v.ai_provider ? `<div class="term-row" style="margin-top:10px;"><span>AI provider</span><b>${esc(v.ai_provider)}</b></div>` : ''}
         </div></div>`;
