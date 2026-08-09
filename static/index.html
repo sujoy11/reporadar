@@ -80,12 +80,69 @@
   .search input{ border:none; outline:none; background:none; font-size:14px; color:var(--ink); width:100%; font-family:'Inter',sans-serif; }
   .search input::placeholder{ color:var(--ink-faint); }
 
+  .url-verify-toggle{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    margin-top:12px; font-size:12.5px; font-weight:600; color:var(--ink-soft);
+    cursor:pointer; -webkit-tap-highlight-color:transparent; user-select:none;
+  }
+  .url-verify-toggle:hover{ color:var(--brand); }
+  .url-verify-toggle svg{ flex:none; }
+  .url-verify-toggle .chev{ transition:transform .2s ease; }
+  .url-verify-toggle.open .chev{ transform:rotate(180deg); }
+
+  .url-verify-box{
+    max-height:0; overflow:hidden; opacity:0;
+    transition:max-height .28s cubic-bezier(.2,.8,.2,1), opacity .22s ease, margin-top .28s ease;
+    margin-top:0;
+  }
+  .url-verify-box.open{ max-height:80px; opacity:1; margin-top:12px; overflow:visible; }
+  .url-verify-row{ display:flex; gap:10px; width:100%; }
+  .url-verify-input{
+    flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:8px;
+    background:var(--card); border:1.5px solid var(--line); border-radius:12px;
+    padding:11px 14px;
+  }
+  .url-verify-input svg{ flex:none; color:var(--ink-faint); }
+  .url-verify-input input{
+    border:none; outline:none; background:none; font-size:13.5px; color:var(--ink);
+    width:100%; font-family:'Inter',sans-serif;
+  }
+  .url-verify-input input::placeholder{ color:var(--ink-faint); }
+  .search-go, .url-verify-btn{
+    -webkit-appearance:none; appearance:none;
+    color:#fff !important; border:none !important;
+    background-image:linear-gradient(120deg, var(--brand) 0%, var(--violet) 50%, var(--brand) 100%);
+    background-size:220% 100%; background-position:0% 0%;
+    background-color:var(--brand);
+  }
+  .search-go:disabled, .url-verify-btn:disabled{ opacity:.6; cursor:default; }
+
+  .url-verify-btn{
+    position:relative; overflow:hidden; flex:none; cursor:pointer; padding:0 18px; border-radius:12px;
+    font-weight:700; font-size:13px;
+    box-shadow:0 10px 22px -10px rgba(52,84,255,.5);
+    transition:transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, background-position .5s ease;
+  }
+  .url-verify-btn:hover{ box-shadow:0 12px 26px -8px rgba(52,84,255,.6); transform:translateY(-1px); background-position:100% 0%; }
+  .url-verify-btn:active{ transform:scale(.94); }
+  .url-verify-btn::after{
+    content:''; position:absolute; inset:0; border-radius:12px; pointer-events:none;
+    box-shadow:0 0 0 0 rgba(139,92,246,0); opacity:0;
+  }
+  .url-verify-btn.verifying::after{ animation:go-shock .55s cubic-bezier(.2,.8,.2,1); }
+  .url-verify-btn.verifying{ animation:btn-press .5s cubic-bezier(.3,1.4,.3,1); }
+  @keyframes btn-press{
+    0%{ transform:scale(1); }
+    30%{ transform:scale(.92); }
+    60%{ transform:scale(1.04); }
+    100%{ transform:scale(1); }
+  }
+
   .search-go{
-    position:relative; flex:none; width:44px; height:44px; border-radius:12px; border:none; cursor:pointer;
-    background:linear-gradient(135deg,var(--brand),var(--violet)); color:#fff;
+    position:relative; flex:none; width:44px; height:44px; border-radius:12px; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 10px 22px -10px rgba(52,84,255,.55);
-    transition:transform .12s cubic-bezier(.3,1.5,.5,1), box-shadow .15s ease;
+    transition:transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, background-position .5s ease;
     isolation:isolate;
   }
   .search-go::before{
@@ -104,7 +161,7 @@
     0%{ box-shadow:0 0 0 0 rgba(52,84,255,.4); opacity:1; }
     100%{ box-shadow:0 0 0 16px rgba(139,92,246,0); opacity:0; }
   }
-  .search-go:hover{ box-shadow:0 12px 26px -8px rgba(52,84,255,.65); transform:translateY(-1px); }
+  .search-go:hover{ box-shadow:0 12px 26px -8px rgba(52,84,255,.65); transform:translateY(-1px); background-position:100% 0%; }
   .search-go:hover::before{ opacity:.5; }
   .search-go:active{ transform:scale(.9); }
   .search-go svg{ transition:transform .35s cubic-bezier(.3,1.6,.4,1); position:relative; }
@@ -342,6 +399,21 @@
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
   </div>
+
+  <div class="url-verify-toggle" id="urlToggle" onclick="toggleUrlVerify()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    <span>Or paste a GitHub link to verify directly</span>
+    <svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+  <div class="url-verify-box" id="urlVerifyBox">
+    <div class="url-verify-row">
+      <div class="url-verify-input">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <input type="text" id="directUrlInput" placeholder="https://github.com/owner/repo">
+      </div>
+      <button class="url-verify-btn" onclick="verifyDirectUrl()">Verify</button>
+    </div>
+  </div>
 </div>
 
 <div class="list-wrap">
@@ -350,7 +422,69 @@
     <div class="live-note"><span class="sw"></span>live · may lag ~10 min</div>
   </div>
 
-  <div id="rows"></div>
+  <div class="row" data-hue="blue" style="animation-delay:.04s" onclick="openDetail(0, event)">
+    <span class="rank">#1</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">termux/</span>termux-app</div>
+      <p class="row-desc">Terminal emulator and Linux environment for Android, no root required — full package manager included.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>32.4k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>4.1k</span>
+        <span class="upd">· 2d ago</span>
+        <span class="lang-chip" style="background:var(--brand-soft);color:var(--brand);">C</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="violet" style="animation-delay:.10s" onclick="openDetail(1, event)">
+    <span class="rank">#2</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">tur-nip/</span>poco-custom-rom-tools</div>
+      <p class="row-desc">Scripts to flash and manage custom ROMs for POCO devices — handles fastboot, TWRP, and A/B partition switching.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>8.2k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>740</span>
+        <span class="upd">· 3mo ago</span>
+        <span class="lang-chip" style="background:var(--violet-soft);color:var(--violet);">Shell</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="coral" style="animation-delay:.16s" onclick="openDetail(2, event)">
+    <span class="rank">#3</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">oldschool-dev/</span>rom-flasher-cli</div>
+      <p class="row-desc">Legacy CLI flashing tool, superseded by newer alternatives — kept for archival and reference purposes.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>3.1k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>510</span>
+        <span class="upd">· 2y ago</span>
+        <span class="lang-chip" style="background:#FFEDE6;color:var(--coral);">Python</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="teal" style="animation-delay:.22s" onclick="openDetail(3, event)">
+    <span class="rank">#4</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">anon-dev/</span>micro-rom-patch</div>
+      <p class="row-desc">Small patch set for battery calibration on custom ROMs — lightweight and focused on one job.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>412</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>38</span>
+        <span class="upd">· 1mo ago</span>
+        <span class="lang-chip" style="background:#E1F7F5;color:var(--teal);">Kotlin</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
 </div>
 
 <footer>Results come from GitHub's live search and may lag a few minutes. Verdicts are an AI-based assessment, not a guarantee.</footer>
@@ -445,7 +579,7 @@
   }
   function langColor(lang){
     if (!lang || lang === 'Unknown') return 'background:#EFEFEA;color:var(--ink-faint);';
-    const map = { 'C':'var(--brand-soft);color:var(--brand);', 'Shell':'var(--violet-soft);color:var(--violet);', 'Python':'#FFEDE6;color:var(--coral);', 'Kotlin':'#E1F7F5;color:var(--teal);', 'Java':'var(--brand-soft);color:var(--brand);', 'JavaScript':'var(--gold-soft,#FCF1DD);color:var(--gold);' };
+    const map = { 'C':'var(--brand-soft);color:var(--brand);', 'Shell':'var(--violet-soft);color:var(--violet);', 'Python':'#FFEDE6;color:var(--coral);', 'Kotlin':'#E1F7F5;color:var(--teal);', 'Java':'var(--brand-soft);color:var(--brand);', 'JavaScript':'#FCF1DD;color:var(--gold);' };
     return map[lang] || 'var(--brand-soft);color:var(--brand);';
   }
   async function loadRepos(q){
@@ -595,6 +729,74 @@
         summary.textContent = 'Could not fetch AI details right now. Please try again.';
         result.classList.add('show');
       });
+  }
+
+  function toggleUrlVerify(){
+    const box = document.getElementById('urlVerifyBox');
+    const toggle = document.getElementById('urlToggle');
+    box.classList.toggle('open');
+    toggle.classList.toggle('open');
+    if (box.classList.contains('open')){
+      setTimeout(() => document.getElementById('directUrlInput').focus(), 200);
+    }
+  }
+
+  function verifyDirectUrl(){
+    const input = document.getElementById('directUrlInput');
+    const url = input.value.trim();
+    if (!url) { input.focus(); return; }
+
+    const btn = document.querySelector('.url-verify-btn');
+    if (btn){
+      btn.classList.remove('verifying');
+      void btn.offsetWidth;
+      btn.classList.add('verifying');
+      setTimeout(() => btn.classList.remove('verifying'), 550);
+    }
+
+    // remove any prior inline error
+    let errEl = document.getElementById('urlVerifyError');
+    if (errEl) errEl.remove();
+
+    function showError(msg){
+      let e = document.getElementById('urlVerifyError');
+      if (!e){
+        e = document.createElement('div');
+        e.id = 'urlVerifyError';
+        e.style.cssText = 'font-size:12px;font-weight:600;color:var(--bad);margin-top:8px;text-align:left;';
+        const row = document.querySelector('.url-verify-row');
+        if (row && row.parentNode) row.parentNode.appendChild(e);
+      }
+      e.textContent = msg;
+    }
+
+    fetch('/api/verify-url', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ url })
+    })
+      .then(r => r.json().then(j => ({ ok:r.ok, j })))
+      .then(({ ok, j }) => {
+        if (!ok || j.error){
+          if (j.error === 'invalid_url' || j.error === 'empty_url')
+            showError('Please paste a valid github.com/owner/repo link.');
+          else if (j.error === 'fetch_failed')
+            showError('Repo not found — check the link.');
+          else if (j.error === 'ai_unavailable')
+            showError('AI check is busy, try again in a moment.');
+          else
+            showError('Something went wrong, please try again.');
+          return;
+        }
+        // assign to repos and reuse openDetail() exactly (sets dOwner/dName/dDesc/dStars/dForks/dUpdated/dOpenRepo + opens modal + lockScroll)
+        repos.push(j);
+        openDetail(repos.length - 1, { currentTarget:null });
+        // reset AI panel then run verify
+        document.getElementById('aiLoading').style.display = 'flex';
+        document.getElementById('aiResult').classList.remove('show');
+        runVerify();
+      })
+      .catch(() => showError('Network error, please try again.'));
   }
 
   function pulseSearch(btn){
