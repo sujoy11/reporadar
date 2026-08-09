@@ -311,6 +311,11 @@
     display:inline-flex; align-items:center; gap:6px; margin-top:16px; padding:6px 12px;
     border-radius:999px; background:rgba(0,224,164,0.12); color:var(--green); font-size:12.5px; font-weight:600;
   }
+  /* backend-wired AI summary rows: stacked, no center gap, wraps cleanly */
+  .ai-row{ padding:7px 0; border-bottom:1px solid var(--line); }
+  .ai-row:last-child{ border-bottom:none; }
+  .ai-row__label{ display:block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted-2); margin-bottom:3px; }
+  .ai-row__val{ display:block; color:var(--text); font-size:13px; line-height:1.5; word-break:break-word; }
 
   .feature-list{display:flex; flex-direction:column; gap:22px;}
   .feature-item{display:flex; gap:16px;}
@@ -742,9 +747,9 @@
         if (idx > 0) {
           const label = esc(line.slice(0, idx).replace(/^\d+\.\s*/, ''));
           const val = esc(line.slice(idx + 1).trim());
-          return `<div class="term-row"><span>${label}</span><b style="text-align:right;max-width:60%;">${val}</b></div>`;
+          return `<div class="ai-row"><span class="ai-row__label">${label}</span><span class="ai-row__val">${val}</span></div>`;
         }
-        return `<div class="term-row"><span>${esc(line)}</span></div>`;
+        return `<div class="ai-row"><span class="ai-row__label">${esc(line)}</span></div>`;
       }).join('');
       out.innerHTML = `<div class="terminal" style="margin-top:4px;">
         <div class="term-bar"><span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
