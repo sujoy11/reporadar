@@ -243,6 +243,10 @@
   @media (max-width:920px){ .signal-grid{grid-template-columns:repeat(2,1fr);} }
   @media (max-width:560px){ .signal-grid{grid-template-columns:1fr;} }
 
+  /* results list (backend-wired) — 2 cols desktop, 1 col mobile */
+  .results-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px;}
+  @media (max-width:760px){ .results-grid{grid-template-columns:1fr;} }
+
   .signal-card{
     background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
     padding:26px 22px; position:relative; overflow:hidden;
@@ -297,8 +301,8 @@
   .term-body{padding:22px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.9;}
   .term-body .l1{color:var(--muted-2);}
   .term-body .l2{color:var(--text); font-weight:600; margin:6px 0 12px;}
-  .term-row{display:flex; justify-content:space-between; color:var(--muted); padding:3px 0;}
-  .term-row b{color:var(--green); font-weight:600;}
+  .term-row{display:flex; justify-content:space-between; gap:12px; color:var(--muted); padding:3px 0; align-items:baseline;}
+  .term-row b{color:var(--green); font-weight:600; text-align:right; word-break:break-word;}
   .term-badge{
     display:inline-flex; align-items:center; gap:6px; margin-top:16px; padding:6px 12px;
     border-radius:999px; background:rgba(0,224,164,0.12); color:var(--green); font-size:12.5px; font-weight:600;
@@ -454,7 +458,7 @@
       <span class="kicker" id="resultsKicker">// live results</span>
       <h2 id="resultsTitle">Repos for your search</h2>
     </div>
-    <div id="resultsList" style="display:grid; grid-template-columns:repeat(2,1fr); gap:16px;"></div>
+    <div id="resultsList" class="results-grid"></div>
     <div id="resultsState" style="text-align:center; color:var(--muted); padding:40px 0; font-size:15px;"></div>
   </section>
 
@@ -726,13 +730,22 @@
       const verdict = v.verdict || 'caution';
       const col = verdictColor[verdict] || 'var(--amber)';
       const ic = verdictIcon[verdict] || '⚠️';
-      const summary = v.summary ? esc(v.summary) : '';
+      const rawSummary = v.summary || '';
+      const summaryRows = rawSummary.split('\n').map(l => l.trim()).filter(Boolean).map(line => {
+        const idx = line.indexOf(':');
+        if (idx > 0) {
+          const label = esc(line.slice(0, idx).replace(/^\d+\.\s*/, ''));
+          const val = esc(line.slice(idx + 1).trim());
+          return `<div class="term-row"><span>${label}</span><b style="text-align:right;max-width:60%;">${val}</b></div>`;
+        }
+        return `<div class="term-row"><span>${esc(line)}</span></div>`;
+      }).join('');
       out.innerHTML = `<div class="terminal" style="margin-top:4px;">
         <div class="term-bar"><span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span>
           <span>${esc(owner)}/${esc(name)} — AI verdict</span></div>
         <div class="term-body">
-          <div class="term-badge" style="background:rgba(0,224,164,0.12); color:${col}; margin-top:0;">${ic} ${verdict.toUpperCase()}</div>
-          <p style="margin-top:12px; color:var(--text); line-height:1.6; font-family:'Inter',sans-serif; font-size:13.5px;">${summary}</p>
+          <div class="term-badge" style="background:rgba(0,224,164,0.12); color:${col}; margin-top:0;">${ic} ${esc(verdict.toUpperCase())}</div>
+          <div style="margin-top:12px;">${summaryRows}</div>
           ${v.ai_provider ? `<div class="term-row" style="margin-top:10px;"><span>AI provider</span><b>${esc(v.ai_provider)}</b></div>` : ''}
         </div></div>`;
       btn.textContent = 'AI Details ✓';
