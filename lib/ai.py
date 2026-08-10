@@ -23,6 +23,34 @@ Answer (keep each line short, plain text, no markdown):
 5. REASONING: one concise sentence explaining WHY the verdict is what it is (e.g. "Recent commits + stable releases + active issues = working" or "Last update 2 years ago + no releases = outdated" or "Some activity but no recent release + open critical bugs = caution")."""
 
 
+def _call_openrouter(full_name, data):
+    key = os.environ.get("OPENROUTER_API_KEY")
+    if not key:
+        raise RuntimeError("no_openrouter_key")
+    prompt = PROMPT.format(
+        full_name=full_name,
+        description=data.get("description", ""),
+        readme=(data.get("readme") or "")[:2000],
+        commits="; ".join(f"{c['date'][:10]}: {c['msg']}" for c in data.get("commits", [])[:3]),
+        latest_release=data.get("latest_release") or "none",
+        pushed_at=data.get("pushed_at") or "unknown",
+        archived=data.get("archived"),
+    )
+    body = json.dumps({
+        "model": "google/gemma-4-26b-a4b-it:free",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.3,
+    }).encode()
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=body,
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        method="POST",
+    )
+    r = urllib.request.urlopen(req, timeout=40)
+    return json.loads(r.read().decode())["choices"][0]["message"]["content"], "openrouter"
+
+
 def _call_mistral(full_name, data):
     key = os.environ.get("MISTRAL_API_KEY")
     if not key:
@@ -73,11 +101,14 @@ def _call_gemini(full_name, data):
 
 
 def verify_repo(full_name, data):
-    """Mistral primary (OpenCompare-style), Gemini fallback. Returns (verdict_text, provider)."""
+    """OpenRouter (free gemma-4-26b) primary, Mistral + Gemini fallback. Returns (verdict_text, provider)."""
     try:
-        return _call_mistral(full_name, data)
+        return _call_openrouter(full_name, data)
     except Exception:
         try:
-            return _call_gemini(full_name, data)
-        except Exception as e:
-            raise RuntimeError(f"ai_unavailable: {e}")
+            return _call_mistral(full_name, data)
+        except Exception:
+            try:
+                return _call_gemini(full_name, data)
+            except Exception as e:
+                raise RuntimeError(f"ai_unavailable: {e}")
