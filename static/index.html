@@ -63,8 +63,14 @@
   .hero{ max-width:560px; margin:6px auto 0; padding:0 24px; text-align:center; }
   .hero h1{ font-weight:800; font-size:27px; letter-spacing:-0.01em; margin:0 0 6px; }
   .hero h1 span{
-    background:linear-gradient(100deg,var(--brand),var(--violet) 60%,var(--coral));
+    background:linear-gradient(100deg,var(--brand),var(--violet) 45%,var(--coral),var(--violet) 75%,var(--brand));
+    background-size:300% 100%;
     -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:hero-gradient 6s ease-in-out infinite;
+  }
+  @keyframes hero-gradient{
+    0%,100%{ background-position:0% 50%; }
+    50%{ background-position:100% 50%; }
   }
   .hero p{ font-size:13.5px; color:var(--ink-soft); margin:0 0 18px; }
 
@@ -97,6 +103,34 @@
   }
   .url-verify-box.open{ max-height:80px; opacity:1; margin-top:12px; overflow:visible; }
   .url-verify-row{ display:flex; gap:10px; width:100%; }
+
+  .cat-scroll{
+    display:flex; gap:9px; overflow-x:auto; padding:16px 24px 4px;
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+  .cat-scroll::-webkit-scrollbar{ display:none; }
+  .cat-chip{
+    flex:none; display:inline-flex; align-items:center; gap:6px;
+    padding:8px 15px; border-radius:999px; border:1.5px solid var(--line);
+    background:var(--card); font-size:12.5px; font-weight:700; color:var(--ink-soft);
+    cursor:pointer; white-space:nowrap; -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    opacity:0; transform:translateY(8px) scale(.94);
+    animation:chip-rise .4s cubic-bezier(.2,.8,.2,1) forwards;
+    transition:border-color .18s ease, transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, background .18s ease, color .18s ease;
+  }
+  @keyframes chip-rise{ to{ opacity:1; transform:translateY(0) scale(1); } }
+  .cat-chip:hover{ border-color:var(--brand); color:var(--brand); transform:translateY(-2px); box-shadow:0 8px 18px -10px rgba(52,84,255,.35); }
+  .cat-chip:active{ transform:scale(.93); }
+  .cat-chip.active{
+    background:linear-gradient(120deg,var(--brand),var(--violet));
+    border-color:transparent; color:#fff;
+    box-shadow:0 10px 20px -10px rgba(52,84,255,.55);
+    animation:chip-pop .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes chip-pop{
+    0%{ transform:scale(1); } 40%{ transform:scale(1.08); } 100%{ transform:scale(1); }
+  }
   .url-verify-input{
     flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:8px;
     background:var(--card); border:1.5px solid var(--line); border-radius:12px;
@@ -328,7 +362,17 @@
   .d-desc{ font-size:14px; color:var(--ink-soft); line-height:1.65; margin-top:12px; }
 
   .stat-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:20px; }
-  .stat-box{ background:var(--paper); border-radius:14px; padding:12px; text-align:center; }
+  .stat-box{
+    background:var(--paper); border-radius:14px; padding:12px; text-align:center;
+    opacity:0; transform:translateY(8px) scale(.95);
+    animation:stat-rise .38s cubic-bezier(.2,.8,.2,1) forwards;
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease;
+  }
+  .stat-box:hover{ transform:translateY(-3px); box-shadow:0 10px 20px -12px rgba(20,18,10,.25); }
+  .stat-box:nth-child(1){ animation-delay:.05s; }
+  .stat-box:nth-child(2){ animation-delay:.11s; }
+  .stat-box:nth-child(3){ animation-delay:.17s; }
+  @keyframes stat-rise{ to{ opacity:1; transform:translateY(0) scale(1); } }
   .stat-box b{ display:block; font-weight:800; font-size:17px; }
   .stat-box span{ font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
 
@@ -439,9 +483,32 @@
   </div>
 </div>
 
+<div class="cat-scroll" id="catScroll">
+  <div class="cat-chip active" data-cat="trending" onclick="selectCategory(this)" style="animation-delay:.02s">🔥 Trending</div>
+  <div class="cat-chip" data-cat="termux" onclick="selectCategory(this)" style="animation-delay:.04s">📟 Termux</div>
+  <div class="cat-chip" data-cat="android-rom" onclick="selectCategory(this)" style="animation-delay:.06s">📱 Android ROM</div>
+  <div class="cat-chip" data-cat="ai-ml" onclick="selectCategory(this)" style="animation-delay:.08s">🤖 AI/ML</div>
+  <div class="cat-chip" data-cat="devops" onclick="selectCategory(this)" style="animation-delay:.10s">⚙️ DevOps</div>
+  <div class="cat-chip" data-cat="web-dev" onclick="selectCategory(this)" style="animation-delay:.12s">🌐 Web Dev</div>
+  <div class="cat-chip" data-cat="mobile-dev" onclick="selectCategory(this)" style="animation-delay:.14s">📲 Mobile Dev</div>
+  <div class="cat-chip" data-cat="security" onclick="selectCategory(this)" style="animation-delay:.16s">🛡️ Security</div>
+  <div class="cat-chip" data-cat="game-dev" onclick="selectCategory(this)" style="animation-delay:.18s">🎮 Game Dev</div>
+  <div class="cat-chip" data-cat="data-science" onclick="selectCategory(this)" style="animation-delay:.20s">📊 Data Science</div>
+  <div class="cat-chip" data-cat="cli-tools" onclick="selectCategory(this)" style="animation-delay:.22s">⌨️ CLI Tools</div>
+  <div class="cat-chip" data-cat="automation" onclick="selectCategory(this)" style="animation-delay:.24s">🔁 Automation</div>
+  <div class="cat-chip" data-cat="backend" onclick="selectCategory(this)" style="animation-delay:.26s">🗄️ Backend</div>
+  <div class="cat-chip" data-cat="frontend" onclick="selectCategory(this)" style="animation-delay:.28s">🎨 Frontend</div>
+  <div class="cat-chip" data-cat="blockchain" onclick="selectCategory(this)" style="animation-delay:.30s">⛓️ Blockchain</div>
+  <div class="cat-chip" data-cat="iot" onclick="selectCategory(this)" style="animation-delay:.32s">🔌 IoT</div>
+  <div class="cat-chip" data-cat="cloud" onclick="selectCategory(this)" style="animation-delay:.34s">☁️ Cloud</div>
+  <div class="cat-chip" data-cat="database" onclick="selectCategory(this)" style="animation-delay:.36s">🗃️ Database</div>
+  <div class="cat-chip" data-cat="chrome-ext" onclick="selectCategory(this)" style="animation-delay:.38s">🧩 Browser Ext</div>
+  <div class="cat-chip" data-cat="open-source" onclick="selectCategory(this)" style="animation-delay:.40s">💡 Open Source</div>
+</div>
+
 <div class="list-wrap">
   <div class="list-head">
-    <div class="count"><b>24</b> repos found</div>
+    <div class="count"><b>0</b> repos found</div>
     <div class="live-note"><span class="sw"></span>live · may lag ~10 min</div>
   </div>
 
@@ -549,6 +616,12 @@
     document.getElementById('dUpdated').textContent = currentRepo.updated;
     document.getElementById('dOpenRepo').href = currentRepo.url;
 
+    document.querySelectorAll('.stat-box').forEach(el => {
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = '';
+    });
+
     // reset AI panel to un-checked state
     document.getElementById('aiLoading').style.display = 'flex';
     document.getElementById('aiResult').classList.remove('show');
@@ -604,19 +677,20 @@
     loading.style.display = 'flex';
     result.classList.remove('show');
 
-    if (currentRepo.ai && currentRepo.ai.reasoning){
-      setTimeout(() => { loading.style.display='none'; renderAi(currentRepo.ai); }, 500);
-      return;
-    }
-
-    const owner = (currentRepo.owner||'').replace(/\/$/,'');
+    const owner = (currentRepo.owner || '').replace(/\/$/, '');
     fetch(`${API_BASE}/api/verify?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(currentRepo.name)}`)
       .then(r => r.json()).then(d => {
         loading.style.display = 'none';
-        if (d.error){ badge.className='ai-verdict-badge bad'; badge.innerHTML='<span class="sw"></span>Unavailable'; modelTag.textContent='via AI'; result.classList.add('show'); return; }
-        const v = (d.verdict||'').toLowerCase();
-        const vclass = v.includes('outdat') ? 'bad' : (v.includes('caution')||v.includes('warn')) ? 'warn' : 'good';
-        const vtext = vclass==='bad'?'Outdated':vclass==='warn'?'Needs caution':'Working';
+        if (d.error){
+          badge.className = 'ai-verdict-badge bad';
+          badge.innerHTML = '<span class="sw"></span>Unavailable';
+          modelTag.textContent = 'via AI';
+          result.classList.add('show');
+          return;
+        }
+        const v = (d.verdict || '').toLowerCase();
+        const vclass = v.includes('outdat') ? 'bad' : (v.includes('caution') || v.includes('warn')) ? 'warn' : 'good';
+        const vtext = vclass === 'bad' ? 'Outdated' : vclass === 'warn' ? 'Needs caution' : 'Working';
         const ai = {
           maintained: d.maintained || '—', maturity: d.maturity || '—',
           community: d.community || '—', docs: d.docs || '—',
@@ -625,25 +699,88 @@
         };
         currentRepo.ai = ai;
         currentRepo.verdict = vclass;
-        renderAi(ai);
+        badge.className = 'ai-verdict-badge ' + vclass;
+        badge.innerHTML = '<span class="sw"></span>' + vtext;
+        maintained.textContent = ai.maintained;
+        maturity.textContent = ai.maturity;
+        community.textContent = ai.community;
+        docs.textContent = ai.docs;
+        setup.textContent = ai.setup;
+        reasoning.textContent = ai.reasoning;
+        modelTag.textContent = 'via ' + (ai.model || 'AI').replace(':free', '').split('/').pop();
+        result.classList.add('show');
       }).catch(() => {
-        loading.style.display='none';
-        badge.className='ai-verdict-badge bad'; badge.innerHTML='<span class="sw"></span>Unavailable';
-        modelTag.textContent='via AI'; result.classList.add('show');
+        loading.style.display = 'none';
+        badge.className = 'ai-verdict-badge bad';
+        badge.innerHTML = '<span class="sw"></span>Unavailable';
+        modelTag.textContent = 'via AI';
+        result.classList.add('show');
       });
+  }
 
-    function renderAi(ai){
-      badge.className = 'ai-verdict-badge ' + (currentRepo.verdict==='warn'?'warn':currentRepo.verdict==='bad'?'bad':'good');
-      badge.innerHTML = '<span class="sw"></span>' + (currentRepo.verdict==='bad'?'Outdated':currentRepo.verdict==='warn'?'Needs caution':'Working');
-      maintained.textContent = ai.maintained;
-      maturity.textContent = ai.maturity;
-      community.textContent = ai.community;
-      docs.textContent = ai.docs;
-      setup.textContent = ai.setup;
-      reasoning.textContent = ai.reasoning;
-      modelTag.textContent = 'via ' + (ai.model || 'AI').replace(':free','').split('/').pop();
-      result.classList.add('show');
+  function selectCategory(chip){
+    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    chip.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+
+    // On category select, call GET /api/search?category={cat}
+    const cat = chip.getAttribute('data-cat');
+    loadRepos('', cat);
+  }
+
+  function loadRepos(q, cat){
+    const container = document.getElementById('rows');
+    const countEl = document.querySelector('.list-head .count');
+    const query = (q || '').trim();
+    let url = API_BASE + '/api/search?';
+    if (cat && cat !== 'trending'){
+      url += 'category=' + encodeURIComponent(cat);
+    } else if (query){
+      url += 'q=' + encodeURIComponent(query);
+    } else {
+      url += 'q=' + encodeURIComponent('stars:>1000');
     }
+    if (container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);font-size:13px;">Searching…</div>';
+    if (countEl) countEl.innerHTML = '<b>…</b> repos found';
+    fetch(url).then(r => r.json()).then(d => {
+      const results = d.results || [];
+      repos = results.map(r => ({
+        owner: (r.owner || '').replace(/\/$/, '') + '/',
+        name: r.name,
+        desc: r.desc || r.description || 'No description provided.',
+        stars: r.stars, forks: r.forks, updated: r.updated,
+        url: r.url || ('https://github.com/' + (r.owner || '').replace(/\/$/, '') + '/' + r.name)
+      }));
+      renderRows();
+      if (countEl) countEl.innerHTML = '<b>' + repos.length + '</b> repos found';
+    }).catch(() => {
+      if (container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--bad);font-size:13px;">Something went wrong. Try again.</div>';
+    });
+  }
+
+  function renderRows(){
+    const container = document.getElementById('rows');
+    if (!container) return;
+    if (!repos.length){
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);font-size:13px;">0 repos found</div>';
+      return;
+    }
+    const hues = ['blue','violet','teal','coral'];
+    container.innerHTML = repos.map((r, i) => `
+      <div class="row" data-hue="${hues[i % hues.length]}" style="animation-delay:${(i*0.05).toFixed(2)}s" onclick="openDetail(${i}, event)">
+        <span class="rank">#${i+1}</span>
+        <div class="row-main">
+          <div class="name"><span class="owner">${r.owner}</span>${r.name}</div>
+          <p class="row-desc">${r.desc}</p>
+          <div class="meta">
+            <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>${r.stars}</span>
+            <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>${r.forks}</span>
+            <span class="upd">· ${r.updated}</span>
+          </div>
+        </div>
+        <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+      </div>`).join('');
   }
 
   function toggleUrlVerify(){
@@ -676,7 +813,8 @@
       body: JSON.stringify({ url })
     }).then(r => r.json()).then(d => {
       if (d.error){
-        if (btn){ btn.classList.remove('loading'); label.textContent = 'Verify'; }
+        btn.classList.remove('loading');
+        label.textContent = 'Verify';
         input.style.borderColor = 'var(--bad)';
         let err = document.getElementById('urlVerifyErr');
         if (!err){
@@ -695,78 +833,22 @@
       repos.push({
         owner: d.owner, name: d.name, desc: d.desc,
         stars: d.stars, forks: d.forks, updated: d.updated,
-        verdict: d.verdict, summary: d.summary, ai: {
+        url: d.url,
+        verdict: d.verdict === 'Working' ? 'good' : d.verdict === 'Needs Caution' ? 'warn' : 'bad',
+        ai: {
           maintained: d.maintained || '—', maturity: d.maturity || '—',
           community: d.community || '—', docs: d.docs || '—',
           setup: d.setup || '—', reasoning: d.reasoning || d.summary,
           model: d.model || d.ai_provider || 'AI'
         }
       });
-      if (btn){ btn.classList.remove('loading'); label.textContent = 'Verify'; }
+      btn.classList.remove('loading');
+      label.textContent = 'Verify';
       openDetail(idx, { currentTarget: null });
     }).catch(() => {
-      if (btn){ btn.classList.remove('loading'); label.textContent = 'Verify'; }
+      btn.classList.remove('loading');
+      label.textContent = 'Verify';
     });
-  }
-
-  function loadRepos(q){
-    q = (q||'').trim();
-    if (q.length < 1) q = 'stars:>1000';
-    const wrap = document.getElementById('rows');
-    if (wrap) wrap.innerHTML = '<div style="padding:24px 4px;color:var(--ink-soft);font-size:13px;">Searching…</div>';
-    fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}`).then(r => r.json()).then(d => {
-      const results = d.results || d || [];
-      repos = results.map(r => ({
-        owner: r.owner + '/', name: r.name, desc: r.description || '',
-        stars: fmtNum(r.stars), forks: fmtNum(r.forks), updated: relTime(r.updated_at || r.pushed_at),
-        url: r.url || `https://github.com/${r.owner}/${r.name}`,
-        language: r.language || ''
-      }));
-      renderRows();
-    }).catch(() => {
-      if (wrap) wrap.innerHTML = '<div style="padding:24px 4px;color:var(--bad);font-size:13px;">Search failed. Try again.</div>';
-    });
-  }
-
-  function fmtNum(n){
-    n = Number(n||0);
-    if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
-    return String(n);
-  }
-  function relTime(iso){
-    if (!iso) return '—';
-    const d = (Date.now() - new Date(iso).getTime())/1000;
-    if (d < 3600) return Math.max(1,Math.floor(d/60)) + 'm ago';
-    if (d < 86400) return Math.floor(d/3600) + 'h ago';
-    if (d < 2592000) return Math.floor(d/86400) + 'd ago';
-    if (d < 31536000) return Math.floor(d/2592000) + 'mo ago';
-    return Math.floor(d/31536000) + 'y ago';
-  }
-
-  function renderRows(){
-    const wrap = document.getElementById('rows');
-    if (!wrap) return;
-    if (!repos.length){ wrap.innerHTML = ''; const c = document.querySelector('.list-head .count'); if (c){ c.innerHTML = '<b>0</b> repos found'; } return; }
-    const HUES = ['blue','violet','coral','teal'];
-    wrap.innerHTML = repos.map((r, i) => `
-      <div class="row" data-hue="${HUES[i % 4]}" style="animation-delay:${(i*0.06).toFixed(2)}s" onclick="openDetail(${i}, event)">
-        <span class="rank">#${i+1}</span>
-        <div class="row-main">
-          <div class="name"><span class="owner">${r.owner}</span>${r.name}</div>
-          <p class="row-desc">${r.desc || ''}</p>
-          <div class="meta">
-            <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>${r.stars}</span>
-            <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>${r.forks}</span>
-            <span class="upd">· ${r.updated}</span>
-            ${r.language ? `<span class="lang-chip" style="background:var(--brand-soft);color:var(--brand);">${r.language}</span>` : ''}
-          </div>
-        </div>
-        <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
-        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-      </div>
-    `).join('');
-    const c = document.querySelector('.list-head .count');
-    if (c) c.innerHTML = `<b>${repos.length}</b> repos found`;
   }
 
   function pulseSearch(btn){
@@ -774,18 +856,10 @@
     void btn.offsetWidth;
     btn.classList.add('searching');
     spawnParticles(btn);
-    setTimeout(() => btn.classList.remove('searching'), 500);
     const inp = document.querySelector('.search input');
     loadRepos(inp ? inp.value : '');
+    setTimeout(() => btn.classList.remove('searching'), 500);
   }
-
-  // Enter triggers search
-  const _inp = document.querySelector('.search input');
-  if (_inp){ _inp.addEventListener('keydown', e => { if (e.key === 'Enter') pulseSearch(document.querySelector('.search-go')); }); }
-
-  // initial load
-  loadRepos('stars:>1000');
-
 
   function spawnParticles(btn){
     const rect = btn.getBoundingClientRect();
