@@ -381,6 +381,17 @@
   .ai-verdict-badge.warn{ background:var(--warn-soft); color:var(--warn); } .ai-verdict-badge.warn .sw{ background:var(--warn); }
   .ai-verdict-badge.bad{  background:var(--bad-soft);  color:var(--bad);  } .ai-verdict-badge.bad .sw{  background:var(--bad); }
 
+  .ai-detail-rows{ display:flex; flex-direction:column; gap:9px; margin-top:16px; text-align:left; }
+  .ai-detail-row{
+    display:flex; gap:12px; padding:11px 13px; border-radius:12px;
+    background:var(--paper); border:1px solid var(--line);
+  }
+  .ai-detail-row .label{
+    flex:none; width:82px; font-size:11px; font-weight:800; letter-spacing:.03em;
+    color:var(--ink-faint); text-transform:uppercase; padding-top:1px;
+  }
+  .ai-detail-row .value{ flex:1; font-size:12.5px; color:var(--ink); line-height:1.5; }
+
   .ai-summary{ font-size:13.5px; color:var(--ink-soft); line-height:1.7; margin-top:16px; text-align:left; }
   .ai-meta-row{ display:flex; justify-content:center; gap:8px; margin-top:16px; }
   .ai-tag{ font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:999px; background:var(--paper); color:var(--ink-soft); }
@@ -490,9 +501,18 @@
         </div>
         <div class="ai-result" id="aiResult">
           <span class="ai-verdict-badge good" id="aiBadge"><span class="sw"></span>Working</span>
-          <p class="ai-summary" id="aiSummary">Actively maintained with frequent commits. Issues are answered quickly and the last release was recent — safe to use for new setups.</p>
+
+          <div class="ai-detail-rows" id="aiDetailRows">
+            <div class="ai-detail-row"><span class="label">Maintained</span><span class="value" id="aiMaintained">—</span></div>
+            <div class="ai-detail-row"><span class="label">Maturity</span><span class="value" id="aiMaturity">—</span></div>
+            <div class="ai-detail-row"><span class="label">Community</span><span class="value" id="aiCommunity">—</span></div>
+            <div class="ai-detail-row"><span class="label">Docs</span><span class="value" id="aiDocs">—</span></div>
+            <div class="ai-detail-row"><span class="label">Setup</span><span class="value" id="aiSetup">—</span></div>
+            <div class="ai-detail-row"><span class="label">Reasoning</span><span class="value" id="aiReasoning">—</span></div>
+          </div>
+
           <div class="ai-meta-row">
-            <span class="ai-tag">via Gemini</span>
+            <span class="ai-tag" id="aiModelTag">via AI</span>
             <span class="ai-tag">checked just now</span>
           </div>
           <p class="ai-disclaimer">AI-based assessment, not a guarantee.</p>
@@ -506,87 +526,6 @@
 <script>
   const API_BASE = "https://reporadar-backend.onrender.com";
   let repos = [];
-
-  const HUES = ['blue','violet','coral','teal','blue','violet','coral','teal'];
-  function fmtStars(n){
-    n = Number(n)||0;
-    if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
-    return String(n);
-  }
-  function fmtForks(n){
-    n = Number(n)||0;
-    if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
-    return String(n);
-  }
-  function relTime(iso){
-    if (!iso) return '—';
-    const d = (Date.now() - new Date(iso).getTime())/1000;
-    if (d < 3600) return Math.max(1,Math.round(d/60)) + 'm ago';
-    if (d < 86400) return Math.round(d/3600) + 'h ago';
-    if (d < 2592000) return Math.round(d/86400) + 'd ago';
-    if (d < 31536000) return Math.round(d/2592000) + 'mo ago';
-    return Math.round(d/31536000) + 'y ago';
-  }
-  function langColor(lang){
-    if (!lang || lang === 'Unknown') return 'background:#EFEFEA;color:var(--ink-faint);';
-    const map = { 'C':'var(--brand-soft);color:var(--brand);', 'Shell':'var(--violet-soft);color:var(--violet);', 'Python':'#FFEDE6;color:var(--coral);', 'Kotlin':'#E1F7F5;color:var(--teal);', 'Java':'var(--brand-soft);color:var(--brand);', 'JavaScript':'#FCF1DD;color:var(--gold);' };
-    return map[lang] || 'var(--brand-soft);color:var(--brand);';
-  }
-  async function loadRepos(q){
-    q = (q||'').trim();
-    if (q.length < 1) q = 'stars:>1000'; // empty box -> default trending
-    const wrap = document.getElementById('rows');
-    if (wrap) wrap.innerHTML = '<div style="padding:24px 4px;color:var(--ink-soft);font-size:13px;font-weight:600;text-align:center;">Searching…</div>';
-    try {
-      const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}`);
-      if (!res.ok) throw new Error('search failed');
-      const data = await res.json();
-      const items = (data && data.results) || [];
-      repos = items.slice(0, 24).map((r, i) => ({
-        owner: (r.owner ? r.owner + '/' : ''),
-        name: r.name,
-        desc: r.description || 'No description provided.',
-        stars: fmtStars(r.stars),
-        forks: fmtForks(r.forks),
-        updated: relTime(r.updated_at),
-        language: r.language || '',
-        verdict: 'good',
-        summary: '',
-        url: r.url || ('https://github.com/' + (r.owner||'') + '/' + (r.name||'')),
-        _owner: r.owner,
-        _name: r.name,
-        hue: HUES[i % HUES.length]
-      }));
-      renderRows();
-    } catch(e){
-      const wrap = document.getElementById('rows');
-      if (wrap) wrap.innerHTML = '<p style="color:var(--ink-soft);font-size:13px;padding:20px 4px;">Could not load results. Please try again.</p>';
-    }
-  }
-
-  function renderRows(){
-    const wrap = document.getElementById('rows');
-    if (!wrap) return;
-    if (!repos.length){ wrap.innerHTML = '<div style="padding:24px 4px;color:var(--ink-soft);font-size:13px;font-weight:600;text-align:center;">0 repos found — try a different search.</div>'; const c=document.querySelector('.list-head .count'); if(c) c.innerHTML='<b>0</b> repos found'; return; }
-    wrap.innerHTML = repos.map((r, i) => `
-      <div class="row" data-hue="${r.hue}" style="animation-delay:${i*0.06}s" onclick="openDetail(${i}, event)">
-        <span class="rank">#${i+1}</span>
-        <div class="row-main">
-          <div class="name"><span class="owner">${r.owner}</span>${r.name}</div>
-          <p class="row-desc">${r.desc}</p>
-          <div class="meta">
-            <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>${r.stars}</span>
-            <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>${r.forks}</span>
-            <span class="upd">· ${r.updated}</span>
-            <span class="lang-chip" style="background:${langColor(r.language)}">${r.language || 'Unknown'}</span>
-          </div>
-        </div>
-        <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
-        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-      </div>`).join('');
-    const c = document.querySelector('.list-head .count');
-    if (c) c.innerHTML = `<b>${repos.length}</b> repos found`;
-  }
 
   repos.forEach(r => { r.url = 'https://github.com/' + r.owner.replace(/\/$/, '') + '/' + r.name; });
 
@@ -654,33 +593,57 @@
     const loading = document.getElementById('aiLoading');
     const result = document.getElementById('aiResult');
     const badge = document.getElementById('aiBadge');
-    const summary = document.getElementById('aiSummary');
+    const modelTag = document.getElementById('aiModelTag');
+    const maintained = document.getElementById('aiMaintained');
+    const maturity = document.getElementById('aiMaturity');
+    const community = document.getElementById('aiCommunity');
+    const docs = document.getElementById('aiDocs');
+    const setup = document.getElementById('aiSetup');
+    const reasoning = document.getElementById('aiReasoning');
 
     loading.style.display = 'flex';
     result.classList.remove('show');
 
-    const owner = currentRepo._owner || (currentRepo.owner || '').replace(/\/$/,'');
-    const name = currentRepo._name || currentRepo.name;
+    if (currentRepo.ai && currentRepo.ai.reasoning){
+      setTimeout(() => { loading.style.display='none'; renderAi(currentRepo.ai); }, 500);
+      return;
+    }
 
-    fetch(`${API_BASE}/api/verify?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(name)}`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(v => {
+    const owner = (currentRepo.owner||'').replace(/\/$/,'');
+    fetch(`${API_BASE}/api/verify?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(currentRepo.name)}`)
+      .then(r => r.json()).then(d => {
         loading.style.display = 'none';
-        const raw = (v.verdict || '').toString().toLowerCase();
-        const key = raw.includes('outdat') ? 'bad' : (raw.includes('caution') || raw.includes('warn')) ? 'warn' : 'good';
-        const label = key === 'good' ? 'Working' : key === 'warn' ? 'Needs caution' : 'Outdated';
-        badge.className = 'ai-verdict-badge ' + key;
-        badge.innerHTML = '<span class="sw"></span>' + label;
-        summary.textContent = (v.summary || 'No AI summary available.').replace(/\n/g, ' ');
-        result.classList.add('show');
-      })
-      .catch(() => {
-        loading.style.display = 'none';
-        badge.className = 'ai-verdict-badge warn';
-        badge.innerHTML = '<span class="sw"></span>Unavailable';
-        summary.textContent = 'Could not fetch AI details right now. Please try again.';
-        result.classList.add('show');
+        if (d.error){ badge.className='ai-verdict-badge bad'; badge.innerHTML='<span class="sw"></span>Unavailable'; modelTag.textContent='via AI'; result.classList.add('show'); return; }
+        const v = (d.verdict||'').toLowerCase();
+        const vclass = v.includes('outdat') ? 'bad' : (v.includes('caution')||v.includes('warn')) ? 'warn' : 'good';
+        const vtext = vclass==='bad'?'Outdated':vclass==='warn'?'Needs caution':'Working';
+        const ai = {
+          maintained: d.maintained || '—', maturity: d.maturity || '—',
+          community: d.community || '—', docs: d.docs || '—',
+          setup: d.setup || '—', reasoning: d.reasoning || d.summary || '—',
+          model: d.ai_provider || 'AI'
+        };
+        currentRepo.ai = ai;
+        currentRepo.verdict = vclass;
+        renderAi(ai);
+      }).catch(() => {
+        loading.style.display='none';
+        badge.className='ai-verdict-badge bad'; badge.innerHTML='<span class="sw"></span>Unavailable';
+        modelTag.textContent='via AI'; result.classList.add('show');
       });
+
+    function renderAi(ai){
+      badge.className = 'ai-verdict-badge ' + (currentRepo.verdict==='warn'?'warn':currentRepo.verdict==='bad'?'bad':'good');
+      badge.innerHTML = '<span class="sw"></span>' + (currentRepo.verdict==='bad'?'Outdated':currentRepo.verdict==='warn'?'Needs caution':'Working');
+      maintained.textContent = ai.maintained;
+      maturity.textContent = ai.maturity;
+      community.textContent = ai.community;
+      docs.textContent = ai.docs;
+      setup.textContent = ai.setup;
+      reasoning.textContent = ai.reasoning;
+      modelTag.textContent = 'via ' + ai.model;
+      result.classList.add('show');
+    }
   }
 
   function toggleUrlVerify(){
@@ -707,88 +670,103 @@
       label.textContent = 'Verifying…';
     }
 
-    // remove any prior inline error
-    let prevErr = document.getElementById('urlVerifyError');
-    if (prevErr) prevErr.remove();
-
-    function stopLoading(){
-      if (btn){ btn.classList.remove('loading'); label.textContent = 'Verify'; }
-    }
-    function showError(msg){
-      let e = document.getElementById('urlVerifyError');
-      if (!e){
-        e = document.createElement('div');
-        e.id = 'urlVerifyError';
-        e.style.cssText = 'font-size:12px;font-weight:600;color:var(--bad);margin-top:8px;text-align:left;';
-      }
-      e.textContent = msg;
-      const row = document.querySelector('.url-verify-row');
-      if (row && row.parentNode && !e.parentNode) row.parentNode.appendChild(e);
-    }
-
-    // 1. validate immediately
-    if (!/github\.com\/[^\/\s]+\/[^\/\s?#]+/.test(url)){
-      stopLoading();
-      showError('Please paste a valid github.com/owner/repo link.');
-      return;
-    }
-
-    // 2. open modal IMMEDIATELY with loading skeleton, before network
-    currentRepo = { owner:'github.com/', name:'…', desc:'Loading repository details…', stars:'—', forks:'—', updated:'—', url:'#' };
-    document.getElementById('dOwner').textContent = 'github.com/';
-    document.getElementById('dName').textContent = 'loading…';
-    document.getElementById('dDesc').textContent = 'Fetching repository details from GitHub…';
-    document.getElementById('dStars').textContent = '—';
-    document.getElementById('dForks').textContent = '—';
-    document.getElementById('dUpdated').textContent = '—';
-    document.getElementById('dOpenRepo').href = '#';
-    // show AI loading skeleton in detail panel too
-    document.getElementById('aiLoading').style.display = 'flex';
-    document.getElementById('aiResult').classList.remove('show');
-    showPanel('detail');
-    overlay.classList.add('open');
-    lockScroll();
-
-    // 3. background fetch
-    fetch('/api/verify-url', {
+    fetch(`${API_BASE}/api/verify-url`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ url })
-    })
-      .then(r => r.json().then(j => ({ ok:r.ok, j })))
-      .then(({ ok, j }) => {
-        stopLoading();
-        if (!ok || j.error){
-          if (j.error === 'invalid_url' || j.error === 'empty_url')
-            showError('Please paste a valid github.com/owner/repo link.');
-          else if (j.error === 'fetch_failed')
-            showError('Repo not found — check the link.');
-          else if (j.error === 'ai_unavailable')
-            showError('AI check is busy, try again in a moment.');
-          else
-            showError('Something went wrong, please try again.');
-          return;
+    }).then(r => r.json()).then(d => {
+      if (d.error){
+        if (btn){ btn.classList.remove('loading'); label.textContent = 'Verify'; }
+        input.style.borderColor = 'var(--bad)';
+        let err = document.getElementById('urlVerifyErr');
+        if (!err){
+          err = document.createElement('div');
+          err.id = 'urlVerifyErr';
+          err.style.cssText = 'font-size:11.5px;color:var(--bad);margin-top:8px;font-weight:600;';
+          document.getElementById('urlVerifyBox').appendChild(err);
         }
-        // 4. populate modal fields
-        currentRepo = {
-          owner: j.owner, name: j.name, desc: j.desc,
-          stars: j.stars, forks: j.forks, updated: j.updated, url: j.url,
-          verdict: j.verdict, summary: j.summary,
-          _owner: j.owner.replace(/\/$/,''), _name: j.name,
-          url: j.url
-        };
-        document.getElementById('dOwner').textContent = j.owner;
-        document.getElementById('dName').textContent = j.name;
-        document.getElementById('dDesc').textContent = j.desc;
-        document.getElementById('dStars').textContent = j.stars;
-        document.getElementById('dForks').textContent = j.forks;
-        document.getElementById('dUpdated').textContent = j.updated;
-        document.getElementById('dOpenRepo').href = j.url;
-      })
-      .catch(() => {
-        stopLoading();
-        showError('Network error, please try again.');
+        err.textContent = d.message || 'Something went wrong. Try again.';
+        return;
+      }
+      input.style.borderColor = '';
+      const err = document.getElementById('urlVerifyErr');
+      if (err) err.remove();
+      const idx = repos.length;
+      repos.push({
+        owner: d.owner, name: d.name, desc: d.desc,
+        stars: d.stars, forks: d.forks, updated: d.updated,
+        verdict: d.verdict, summary: d.summary, ai: {
+          maintained: d.maintained || '—', maturity: d.maturity || '—',
+          community: d.community || '—', docs: d.docs || '—',
+          setup: d.setup || '—', reasoning: d.reasoning || d.summary,
+          model: d.ai_provider || 'AI'
+        }
       });
+      if (btn){ btn.classList.remove('loading'); label.textContent = 'Verify'; }
+      openDetail(idx, { currentTarget: null });
+    }).catch(() => {
+      if (btn){ btn.classList.remove('loading'); label.textContent = 'Verify'; }
+    });
+  }
+
+  function loadRepos(q){
+    q = (q||'').trim();
+    if (q.length < 1) q = 'stars:>1000';
+    const wrap = document.getElementById('rows');
+    if (wrap) wrap.innerHTML = '<div style="padding:24px 4px;color:var(--ink-soft);font-size:13px;">Searching…</div>';
+    fetch(`${API_BASE}/api/search?q=${encodeURIComponent(q)}`).then(r => r.json()).then(d => {
+      const results = d.results || d || [];
+      repos = results.map(r => ({
+        owner: r.owner + '/', name: r.name, desc: r.description || '',
+        stars: fmtNum(r.stars), forks: fmtNum(r.forks), updated: relTime(r.updated_at || r.pushed_at),
+        url: r.url || `https://github.com/${r.owner}/${r.name}`,
+        language: r.language || ''
+      }));
+      renderRows();
+    }).catch(() => {
+      if (wrap) wrap.innerHTML = '<div style="padding:24px 4px;color:var(--bad);font-size:13px;">Search failed. Try again.</div>';
+    });
+  }
+
+  function fmtNum(n){
+    n = Number(n||0);
+    if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/,'') + 'k';
+    return String(n);
+  }
+  function relTime(iso){
+    if (!iso) return '—';
+    const d = (Date.now() - new Date(iso).getTime())/1000;
+    if (d < 3600) return Math.max(1,Math.floor(d/60)) + 'm ago';
+    if (d < 86400) return Math.floor(d/3600) + 'h ago';
+    if (d < 2592000) return Math.floor(d/86400) + 'd ago';
+    if (d < 31536000) return Math.floor(d/2592000) + 'mo ago';
+    return Math.floor(d/31536000) + 'y ago';
+  }
+
+  function renderRows(){
+    const wrap = document.getElementById('rows');
+    if (!wrap) return;
+    if (!repos.length){ wrap.innerHTML = ''; const c = document.querySelector('.list-head .count'); if (c){ c.innerHTML = '<b>0</b> repos found'; } return; }
+    const HUES = ['blue','violet','coral','teal'];
+    wrap.innerHTML = repos.map((r, i) => `
+      <div class="row" data-hue="${HUES[i % 4]}" style="animation-delay:${(i*0.06).toFixed(2)}s" onclick="openDetail(${i}, event)">
+        <span class="rank">#${i+1}</span>
+        <div class="row-main">
+          <div class="name"><span class="owner">${r.owner}</span>${r.name}</div>
+          <p class="row-desc">${r.desc || ''}</p>
+          <div class="meta">
+            <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>${r.stars}</span>
+            <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>${r.forks}</span>
+            <span class="upd">· ${r.updated}</span>
+            ${r.language ? `<span class="lang-chip" style="background:var(--brand-soft);color:var(--brand);">${r.language}</span>` : ''}
+          </div>
+        </div>
+        <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+      </div>
+    `).join('');
+    const c = document.querySelector('.list-head .count');
+    if (c) c.innerHTML = `<b>${repos.length}</b> repos found`;
   }
 
   function pulseSearch(btn){
@@ -798,8 +776,16 @@
     spawnParticles(btn);
     setTimeout(() => btn.classList.remove('searching'), 500);
     const inp = document.querySelector('.search input');
-    if (inp) loadRepos(inp.value);
+    loadRepos(inp ? inp.value : '');
   }
+
+  // Enter triggers search
+  const _inp = document.querySelector('.search input');
+  if (_inp){ _inp.addEventListener('keydown', e => { if (e.key === 'Enter') pulseSearch(document.querySelector('.search-go')); }); }
+
+  // initial load
+  loadRepos('stars:>1000');
+
 
   function spawnParticles(btn){
     const rect = btn.getBoundingClientRect();
@@ -831,15 +817,6 @@
     void btn.offsetWidth;
     btn.classList.add('pop');
   }
-
-  // backend wiring: Enter triggers search; load default query on open
-  (function(){
-    const inp = document.querySelector('.search input');
-    if (inp){
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); pulseSearch(document.querySelector('.search-go')); } });
-    }
-    loadRepos('termux');
-  })();
 </script>
 
 </body>

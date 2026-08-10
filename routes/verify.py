@@ -21,6 +21,7 @@ async def verify(owner: str = "", name: str = ""):
                 "verdict": cached.get("verdict"), "summary": cached.get("summary"),
                 "ai_provider": cached.get("ai_provider"),
                 "maintained": cached.get("maintained"), "maturity": cached.get("maturity"),
+                "community": cached.get("community"), "docs": cached.get("docs"),
                 "setup": cached.get("setup"), "reasoning": cached.get("reasoning")}
     # fall through to fresh verify if no valid cache
 
@@ -37,17 +38,19 @@ async def verify(owner: str = "", name: str = ""):
     except RuntimeError as e:
         return {"error": "ai_unavailable", "message": str(e)}
 
-    # 4) parse structured fields from the AI text (match numbered lines 1-5)
+    # 4) parse structured fields from the AI text (match numbered lines 1-7)
     import re as _re
     verdict = "Needs Caution ⚠️"
     maintained = ""
     maturity = ""
+    community = ""
+    docs = ""
     setup = ""
     reasoning = ""
     def clean(s):
         s = _re.sub(r'^\s*\d+\.\s*', '', s)         # strip "1. "
         s = _re.sub(r'\*\*', '', s)                  # strip bold
-        s = _re.sub(r'^(MAINTAINED|MATURITY|SETUP|REASONING)\s*:\s*', '', s, flags=_re.I)  # strip label
+        s = _re.sub(r'^(MAINTAINED|MATURITY|COMMUNITY|DOCS|SETUP|REASONING)\s*:\s*', '', s, flags=_re.I)  # strip label
         return s.strip()
     for line in text.splitlines():
         u = line.upper()
@@ -55,14 +58,18 @@ async def verify(owner: str = "", name: str = ""):
             maintained = clean(line.split(":", 1)[-1])
         elif u.startswith("2") and "MATURITY:" in u:
             maturity = clean(line.split(":", 1)[-1])
-        elif u.startswith("3") and "SETUP:" in u:
+        elif u.startswith("3") and "COMMUNITY:" in u:
+            community = clean(line.split(":", 1)[-1])
+        elif u.startswith("4") and "DOCS:" in u:
+            docs = clean(line.split(":", 1)[-1])
+        elif u.startswith("5") and "SETUP:" in u:
             setup = clean(line.split(":", 1)[-1])
-        elif u.startswith("5") and "REASONING:" in u:
+        elif u.startswith("7") and "REASONING:" in u:
             reasoning = clean(line.split(":", 1)[-1])
-        elif u.startswith("4") or "VERDICT:" in u:
+        elif u.startswith("6") or "VERDICT:" in u:
             verdict = clean(line.split(":", 1)[-1]) or verdict
     db.set_verified(owner, name, verdict, text, provider, detail.get("stars", 0))
     return {"source": "live", "owner": owner, "name": name,
             "verdict": verdict, "summary": text, "ai_provider": provider,
-            "maintained": maintained, "maturity": maturity, "setup": setup,
-            "reasoning": reasoning}
+            "maintained": maintained, "maturity": maturity, "community": community,
+            "docs": docs, "setup": setup, "reasoning": reasoning}

@@ -5,7 +5,7 @@ import json
 
 
 PROMPT = """You are analyzing a GitHub repository based ONLY on the data provided.
-Do not invent facts. Answer in 5 short parts.
+Do not invent facts. Answer in 7 short parts.
 
 Repository: {full_name}
 Description: {description}
@@ -18,9 +18,11 @@ Archived: {archived}
 Answer (keep each line short, plain text, no markdown):
 1. MAINTAINED: Yes/No/Unclear + one short reason
 2. MATURITY: Production-ready / Experimental / Early-stage
-3. SETUP: Simple / Moderate / Complex
-4. VERDICT: Working ✅ / Needs Caution ⚠️ / Outdated ❌
-5. REASONING: one concise sentence explaining WHY the verdict is what it is (e.g. "Recent commits + stable releases + active issues = working" or "Last update 2 years ago + no releases = outdated" or "Some activity but no recent release + open critical bugs = caution")."""
+3. COMMUNITY: one short phrase (e.g. "Active — issues answered in days" or "Quiet — few recent discussions")
+4. DOCS: one short phrase (e.g. "Clear README with setup steps" or "Sparse — minimal docs")
+5. SETUP: Simple / Moderate / Complex
+6. VERDICT: Working ✅ / Needs Caution ⚠️ / Outdated ❌
+7. REASONING: one concise sentence explaining WHY the verdict is what it is."""
 
 
 def _call_openrouter(full_name, data):

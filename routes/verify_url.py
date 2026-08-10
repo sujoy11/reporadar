@@ -66,6 +66,7 @@ async def verify_url(request: Request):
     verdict_raw = ""
     summary = ""
     provider = "Gemini"
+    maintained = maturity = community = docs = setup = reasoning = ""
     if cached and cached.get("reasoning"):
         verdict_raw = cached.get("verdict") or ""
         summary = cached.get("summary") or ""
@@ -82,11 +83,26 @@ async def verify_url(request: Request):
         import re as _re
         for line in text.splitlines():
             u = line.upper()
-            if "VERDICT:" in u or u.startswith("4"):
+            if "VERDICT:" in u or u.startswith("6"):
                 verdict_raw = _re.sub(r'^\s*\d+\.\s*', '', line.split(":", 1)[-1]).strip()
                 break
         summary = text
         stars = detail.get("stars") or 0
+        # parse structured fields
+        for line in text.splitlines():
+            u = line.upper()
+            if u.startswith("1") and "MAINTAINED:" in u:
+                maintained = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
+            elif u.startswith("2") and "MATURITY:" in u:
+                maturity = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
+            elif u.startswith("3") and "COMMUNITY:" in u:
+                community = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
+            elif u.startswith("4") and "DOCS:" in u:
+                docs = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
+            elif u.startswith("5") and "SETUP:" in u:
+                setup = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
+            elif u.startswith("7") and "REASONING:" in u:
+                reasoning = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
         db.set_verified(owner, name, verdict_raw, text, provider, stars)
 
     raw = verdict_raw.lower()
@@ -114,4 +130,10 @@ async def verify_url(request: Request):
         "verdict": verdict,
         "summary": summary,
         "ai_provider": provider,
+        "maintained": maintained,
+        "maturity": maturity,
+        "community": community,
+        "docs": docs,
+        "setup": setup,
+        "reasoning": reasoning,
     }
