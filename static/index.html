@@ -37,11 +37,17 @@
 
   /* ---- colorful ambient backdrop ---- */
   .bg-wash{
-    position:fixed; inset:0; z-index:0; pointer-events:none;
+    position:fixed; inset:-10%; z-index:0; pointer-events:none;
     background:
       radial-gradient(600px 320px at 15% -8%, rgba(52,84,255,.14), transparent 60%),
       radial-gradient(500px 300px at 100% 5%, rgba(138,92,255,.13), transparent 60%),
       radial-gradient(500px 260px at 50% 30%, rgba(224,166,0,.08), transparent 60%);
+    animation:wash-drift 18s ease-in-out infinite;
+  }
+  @keyframes wash-drift{
+    0%,100%{ transform:translate(0,0) scale(1); }
+    33%{ transform:translate(1.5%,1%) scale(1.03); }
+    66%{ transform:translate(-1%,1.5%) scale(1.01); }
   }
   header, .hero, .list-wrap, footer{ position:relative; z-index:1; }
 
@@ -63,14 +69,8 @@
   .hero{ max-width:560px; margin:6px auto 0; padding:0 24px; text-align:center; }
   .hero h1{ font-weight:800; font-size:27px; letter-spacing:-0.01em; margin:0 0 6px; }
   .hero h1 span{
-    background:linear-gradient(100deg,var(--brand),var(--violet) 45%,var(--coral),var(--violet) 75%,var(--brand));
-    background-size:300% 100%;
+    background:linear-gradient(100deg,var(--brand),var(--violet) 60%,var(--coral));
     -webkit-background-clip:text; background-clip:text; color:transparent;
-    animation:hero-gradient 6s ease-in-out infinite;
-  }
-  @keyframes hero-gradient{
-    0%,100%{ background-position:0% 50%; }
-    50%{ background-position:100% 50%; }
   }
   .hero p{ font-size:13.5px; color:var(--ink-soft); margin:0 0 18px; }
 
@@ -103,34 +103,6 @@
   }
   .url-verify-box.open{ max-height:80px; opacity:1; margin-top:12px; overflow:visible; }
   .url-verify-row{ display:flex; gap:10px; width:100%; }
-
-  .cat-scroll{
-    display:flex; gap:9px; overflow-x:auto; padding:16px 24px 4px;
-    scrollbar-width:none; -ms-overflow-style:none;
-  }
-  .cat-scroll::-webkit-scrollbar{ display:none; }
-  .cat-chip{
-    flex:none; display:inline-flex; align-items:center; gap:6px;
-    padding:8px 15px; border-radius:999px; border:1.5px solid var(--line);
-    background:var(--card); font-size:12.5px; font-weight:700; color:var(--ink-soft);
-    cursor:pointer; white-space:nowrap; -webkit-tap-highlight-color:transparent;
-    user-select:none;
-    opacity:0; transform:translateY(8px) scale(.94);
-    animation:chip-rise .4s cubic-bezier(.2,.8,.2,1) forwards;
-    transition:border-color .18s ease, transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, background .18s ease, color .18s ease;
-  }
-  @keyframes chip-rise{ to{ opacity:1; transform:translateY(0) scale(1); } }
-  .cat-chip:hover{ border-color:var(--brand); color:var(--brand); transform:translateY(-2px); box-shadow:0 8px 18px -10px rgba(52,84,255,.35); }
-  .cat-chip:active{ transform:scale(.93); }
-  .cat-chip.active{
-    background:linear-gradient(120deg,var(--brand),var(--violet));
-    border-color:transparent; color:#fff;
-    box-shadow:0 10px 20px -10px rgba(52,84,255,.55);
-    animation:chip-pop .4s cubic-bezier(.34,1.56,.64,1);
-  }
-  @keyframes chip-pop{
-    0%{ transform:scale(1); } 40%{ transform:scale(1.08); } 100%{ transform:scale(1); }
-  }
   .url-verify-input{
     flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:8px;
     background:var(--card); border:1.5px solid var(--line); border-radius:12px;
@@ -168,50 +140,124 @@
   .url-verify-btn.loading{ opacity:.85; pointer-events:none; }
   .url-verify-btn:hover{ box-shadow:0 12px 26px -8px rgba(52,84,255,.6); transform:translateY(-1px); background-position:100% 0%; }
   .url-verify-btn:active{ transform:scale(.94); }
+  .url-verify-btn::after{
+    content:''; position:absolute; inset:0; border-radius:12px; pointer-events:none;
+    box-shadow:0 0 0 0 rgba(139,92,246,0); opacity:0;
+  }
+  .url-verify-btn.verifying::after{ animation:go-shock .55s cubic-bezier(.2,.8,.2,1); }
+  .url-verify-btn.verifying{ animation:btn-press .5s cubic-bezier(.3,1.4,.3,1); }
+  @keyframes btn-press{
+    0%{ transform:scale(1); }
+    30%{ transform:scale(.92); }
+    60%{ transform:scale(1.04); }
+    100%{ transform:scale(1); }
+  }
 
   .search-go{
     position:relative; flex:none; width:44px; height:44px; border-radius:12px; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 10px 22px -10px rgba(52,84,255,.55);
     transition:transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, background-position .5s ease;
-    overflow:hidden;
+    isolation:isolate;
+  }
+  .search-go::before{
+    content:''; position:absolute; inset:-5px; border-radius:15px; z-index:-1;
+    background:conic-gradient(from 0deg, var(--brand), var(--violet), var(--brand));
+    opacity:.32; filter:blur(7px);
+    animation:halo-spin 3.4s linear infinite;
+  }
+  @keyframes halo-spin{ to{ transform:rotate(360deg); } }
+  .search-go::after{
+    content:''; position:absolute; inset:0; border-radius:12px; pointer-events:none;
+    box-shadow:0 0 0 0 rgba(52,84,255,0); opacity:0;
+  }
+  .search-go.searching::after{ animation:go-shock .55s cubic-bezier(.2,.8,.2,1); }
+  @keyframes go-shock{
+    0%{ box-shadow:0 0 0 0 rgba(52,84,255,.4); opacity:1; }
+    100%{ box-shadow:0 0 0 16px rgba(139,92,246,0); opacity:0; }
   }
   .search-go:hover{ box-shadow:0 12px 26px -8px rgba(52,84,255,.65); transform:translateY(-1px); background-position:100% 0%; }
+  .search-go:hover::before{ opacity:.5; }
   .search-go:active{ transform:scale(.9); }
-
-  /* ---- NEW click animation: a soft light "sweep" glides across the
-     button, and a thin ring contracts inward toward the icon — minimal,
-     no particles, no spinning halo. Applies to search-go, url-verify-btn,
-     get-ai-btn (all share the .btn-sweep class). ---- */
-  .btn-sweep{ position:relative; overflow:hidden; isolation:isolate; }
-  .btn-sweep::before{
-    content:''; position:absolute; top:0; bottom:0; left:-45%; width:35%;
-    background:linear-gradient(115deg, transparent, rgba(255,255,255,.65), transparent);
-    transform:skewX(-18deg); pointer-events:none; opacity:0; z-index:1;
-  }
-  .btn-sweep.sweep-run::before{ animation:sweep-glide .6s ease forwards; }
-  @keyframes sweep-glide{
-    0%{ left:-45%; opacity:.9; }
-    100%{ left:130%; opacity:0; }
-  }
-  .btn-sweep::after{
-    content:''; position:absolute; inset:0; margin:auto; border-radius:inherit;
-    border:1.5px solid rgba(255,255,255,.9); pointer-events:none; opacity:0;
-  }
-  .btn-sweep.sweep-run::after{ animation:ring-contract .5s cubic-bezier(.2,.7,.3,1); }
-  @keyframes ring-contract{
-    0%{ transform:scale(1.5); opacity:0; }
-    35%{ opacity:.8; }
-    100%{ transform:scale(1); opacity:0; }
-  }
-  .btn-sweep.sweep-run{ animation:btn-dip .4s ease; }
-  @keyframes btn-dip{
-    0%{ transform:scale(1); }
-    40%{ transform:scale(.94); }
-    100%{ transform:scale(1); }
+  .search-go svg{ transition:transform .35s cubic-bezier(.3,1.6,.4,1); position:relative; }
+  .search-go:hover svg{ transform:scale(1.12) rotate(-8deg); }
+  .search-go.searching svg{ animation:go-search .5s cubic-bezier(.3,1.4,.3,1); }
+  @keyframes go-search{
+    0%{ transform:scale(1) rotate(0); }
+    30%{ transform:scale(.72) rotate(-18deg); }
+    60%{ transform:scale(1.15) rotate(4deg); }
+    100%{ transform:scale(1) rotate(0); }
   }
 
-  .list-wrap{ max-width:680px; margin:26px auto 60px; padding:0 24px; }
+  .particle{
+    position:fixed; width:6px; height:6px; border-radius:50%;
+    pointer-events:none; z-index:9999; top:0; left:0;
+    animation:particle-burst .6s cubic-bezier(.25,.8,.35,1) forwards;
+  }
+  @keyframes particle-burst{
+    0%{ transform:translate(0,0) scale(1); opacity:1; }
+    100%{ transform:translate(var(--px), var(--py)) scale(0); opacity:0; }
+  }
+
+  /* ---- category filter bar ---- */
+  .cat-bar-wrap{ max-width:680px; margin:22px auto 0; padding:0 24px; }
+  .cat-scroll{
+    display:flex; gap:8px; overflow-x:auto; padding:2px 2px 10px;
+    -ms-overflow-style:none; scrollbar-width:none;
+  }
+  .cat-scroll::-webkit-scrollbar{ display:none; }
+  .cat-chip{
+    flex:none; display:flex; align-items:center; gap:7px;
+    font-size:12.5px; font-weight:700; color:var(--ink-soft);
+    background:var(--card); border:1.5px solid var(--line); border-radius:999px;
+    padding:9px 15px; cursor:pointer; white-space:nowrap;
+    -webkit-tap-highlight-color:transparent; user-select:none;
+    opacity:0; transform:translateX(10px);
+    animation:chip-in .4s cubic-bezier(.2,.8,.2,1) forwards;
+    transition:border-color .18s ease, color .18s ease, background .18s ease, transform .18s cubic-bezier(.3,1.4,.4,1);
+  }
+  @keyframes chip-in{ to{ opacity:1; transform:translateX(0); } }
+  .cat-chip .cdot{ width:7px; height:7px; border-radius:50%; flex:none; }
+  .cat-chip:hover{ border-color:var(--brand); color:var(--ink); transform:translateY(-1px); }
+  .cat-chip:active{ transform:scale(.95); }
+  .cat-chip.active{
+    color:#fff; border-color:transparent;
+    box-shadow:0 8px 18px -8px rgba(20,18,15,.35);
+  }
+  .cat-chip.active .cdot{ background:#fff !important; }
+
+  .cat-count-wrap{
+    max-width:680px; margin:14px auto 0; padding:0 24px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  .cat-count{ font-size:13px; color:var(--ink-soft); }
+  .cat-count b{ color:var(--brand); font-weight:700; display:inline-block; }
+  .cat-count b.is-animating{ animation:count-pop .3s cubic-bezier(.3,1.6,.4,1); }
+  @keyframes count-pop{ 0%{ transform:scale(.6); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
+
+  .row.row-hidden{
+    display:none;
+  }
+  .row.row-filtering-in{
+    animation:rise .38s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+
+  .empty-state{
+    display:none; flex-direction:column; align-items:center; text-align:center;
+    padding:50px 20px; opacity:0; animation:panel-in .4s ease forwards;
+  }
+  .empty-state.show{ display:flex; }
+  .empty-state .es-ring{
+    width:46px; height:46px; border-radius:50%; margin-bottom:16px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--brand-soft); color:var(--brand);
+    animation:es-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes es-pulse{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.12); opacity:.7; } }
+  .empty-state p{ font-size:13.5px; color:var(--ink-soft); max-width:280px; line-height:1.6; margin:0; }
+  .empty-state .es-title{ font-weight:700; color:var(--ink); font-size:14.5px; margin-bottom:6px; }
+
+  .list-wrap{ max-width:680px; margin:16px auto 60px; padding:0 24px; }
   .list-head{
     display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
     margin-bottom:14px;
@@ -334,9 +380,9 @@
   .modal-head .close-btn:hover{ background:var(--bad-soft); color:var(--bad); }
   .modal-head .m-title{ font-weight:700; font-size:14px; }
 
-  .modal-body{ padding:20px; overflow-y:auto; }
+  .modal-body{ padding:20px 20px 0; overflow-y:auto; overscroll-behavior:contain; }
 
-  .panel{ display:none; }
+  .panel{ display:none; padding-bottom:16px; }
   .panel.active{ display:block; animation:panel-in .32s cubic-bezier(.2,.8,.2,1); }
   @keyframes panel-in{ from{ opacity:0; transform:translateX(10px); } to{ opacity:1; transform:translateX(0); } }
 
@@ -346,64 +392,22 @@
   .d-desc{ font-size:14px; color:var(--ink-soft); line-height:1.65; margin-top:12px; }
 
   .stat-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:20px; }
-  .stat-box{
-    background:var(--paper); border-radius:14px; padding:12px; text-align:center;
-    opacity:0; transform:translateY(8px) scale(.95);
-    animation:stat-rise .38s cubic-bezier(.2,.8,.2,1) forwards;
-    transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease;
-  }
-  .stat-box:hover{ transform:translateY(-3px); box-shadow:0 10px 20px -12px rgba(20,18,10,.25); }
-  .stat-box:nth-child(1){ animation-delay:.04s; }
-  .stat-box:nth-child(2){ animation-delay:.08s; }
-  .stat-box:nth-child(3){ animation-delay:.12s; }
-  .stat-box:nth-child(4){ animation-delay:.16s; }
-  .stat-box:nth-child(5){ animation-delay:.20s; }
-  .stat-box:nth-child(6){ animation-delay:.24s; }
-  @keyframes stat-rise{ to{ opacity:1; transform:translateY(0) scale(1); } }
-  .stat-box b{ display:block; font-weight:800; font-size:16px; }
-  .stat-box span{ font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
+  .stat-box{ background:var(--paper); border-radius:14px; padding:12px; text-align:center; }
+  .stat-box b{ display:block; font-weight:800; font-size:17px; }
+  .stat-box span{ font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
 
-  .info-chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
-  .info-chip{
-    font-size:11px; font-weight:700; padding:5px 11px; border-radius:999px;
-    background:var(--paper); color:var(--ink-soft); border:1px solid var(--line);
-    opacity:0; transform:translateY(6px);
-    animation:chip-fade .35s ease forwards;
+  /* sticky action-button footer — stays visible no matter how long the
+     description/AI content above it scrolls. bottom:0 anchors it to the
+     nearest scrolling ancestor, which is .modal-body (overflow-y:auto). */
+  .btn-row{
+    position:sticky; bottom:0; z-index:3;
+    display:flex; gap:10px;
+    margin-top:22px; padding:14px 0 20px;
+    background:linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--card) 22%);
   }
-  .info-chip:nth-child(1){ animation-delay:.30s; }
-  .info-chip:nth-child(2){ animation-delay:.35s; }
-  .info-chip:nth-child(3){ animation-delay:.40s; }
-  @keyframes chip-fade{ to{ opacity:1; transform:translateY(0); } }
-  .info-chip.lang{ background:var(--brand-soft); color:var(--brand); border-color:transparent; }
-  .info-chip.archived{ background:var(--bad-soft); color:var(--bad); border-color:transparent; }
-
-  .meta-line-row{ display:flex; flex-direction:column; gap:7px; margin-top:14px; }
-  .meta-line{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft); }
-  .meta-line svg{ flex:none; color:var(--ink-faint); }
-  .meta-line a{ color:var(--brand); text-decoration:none; font-weight:600; }
-  .meta-line a:hover{ text-decoration:underline; }
-
-  .topics-row{ display:flex; gap:7px; flex-wrap:wrap; margin-top:14px; }
-  .topic-pill{
-    font-size:10.5px; font-weight:600; padding:4px 10px; border-radius:999px;
-    background:var(--violet-soft); color:var(--violet);
-    opacity:0; transform:scale(.9);
-    animation:topic-pop .3s cubic-bezier(.34,1.56,.64,1) forwards;
+  .btn-row::before{
+    content:''; position:absolute; left:-20px; right:-20px; top:0; height:1px; background:var(--line);
   }
-  @keyframes topic-pop{ to{ opacity:1; transform:scale(1); } }
-
-  .readme-preview{
-    margin-top:16px; padding:13px 15px; border-radius:14px;
-    background:var(--paper); border:1px solid var(--line);
-    font-size:12.5px; color:var(--ink-soft); line-height:1.6;
-    display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;
-  }
-  .readme-label{
-    font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
-    color:var(--ink-faint); margin:16px 0 6px;
-  }
-
-  .btn-row{ display:flex; gap:10px; margin-top:22px; }
 
   .get-ai-btn{
     flex:1; width:100%; margin-top:0; border:none; cursor:pointer;
@@ -486,7 +490,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" value="" placeholder="termux tools, custom rom poco…">
     </div>
-    <button class="search-go btn-sweep" aria-label="Search" onclick="pulseSearch(this)">
+    <button class="search-go" aria-label="Search" onclick="pulseSearch(this)">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
   </div>
@@ -502,7 +506,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         <input type="text" id="directUrlInput" placeholder="https://github.com/owner/repo">
       </div>
-      <button class="url-verify-btn btn-sweep" id="urlVerifyBtn" onclick="verifyDirectUrl()">
+      <button class="url-verify-btn" id="urlVerifyBtn" onclick="verifyDirectUrl()">
         <span class="btn-spinner" id="urlVerifySpinner"></span>
         <span id="urlVerifyLabel">Verify</span>
       </button>
@@ -510,36 +514,120 @@
   </div>
 </div>
 
-<div class="cat-scroll" id="catScroll">
-  <div class="cat-chip active" data-cat="trending" onclick="selectCategory(this)" style="animation-delay:.02s">🔥 Trending</div>
-  <div class="cat-chip" data-cat="termux" onclick="selectCategory(this)" style="animation-delay:.04s">📟 Termux</div>
-  <div class="cat-chip" data-cat="android-rom" onclick="selectCategory(this)" style="animation-delay:.06s">📱 Android ROM</div>
-  <div class="cat-chip" data-cat="ai-ml" onclick="selectCategory(this)" style="animation-delay:.08s">🤖 AI/ML</div>
-  <div class="cat-chip" data-cat="devops" onclick="selectCategory(this)" style="animation-delay:.10s">⚙️ DevOps</div>
-  <div class="cat-chip" data-cat="web-dev" onclick="selectCategory(this)" style="animation-delay:.12s">🌐 Web Dev</div>
-  <div class="cat-chip" data-cat="mobile-dev" onclick="selectCategory(this)" style="animation-delay:.14s">📲 Mobile Dev</div>
-  <div class="cat-chip" data-cat="security" onclick="selectCategory(this)" style="animation-delay:.16s">🛡️ Security</div>
-  <div class="cat-chip" data-cat="game-dev" onclick="selectCategory(this)" style="animation-delay:.18s">🎮 Game Dev</div>
-  <div class="cat-chip" data-cat="data-science" onclick="selectCategory(this)" style="animation-delay:.20s">📊 Data Science</div>
-  <div class="cat-chip" data-cat="cli-tools" onclick="selectCategory(this)" style="animation-delay:.22s">⌨️ CLI Tools</div>
-  <div class="cat-chip" data-cat="automation" onclick="selectCategory(this)" style="animation-delay:.24s">🔁 Automation</div>
-  <div class="cat-chip" data-cat="backend" onclick="selectCategory(this)" style="animation-delay:.26s">🗄️ Backend</div>
-  <div class="cat-chip" data-cat="frontend" onclick="selectCategory(this)" style="animation-delay:.28s">🎨 Frontend</div>
-  <div class="cat-chip" data-cat="blockchain" onclick="selectCategory(this)" style="animation-delay:.30s">⛓️ Blockchain</div>
-  <div class="cat-chip" data-cat="iot" onclick="selectCategory(this)" style="animation-delay:.32s">🔌 IoT</div>
-  <div class="cat-chip" data-cat="cloud" onclick="selectCategory(this)" style="animation-delay:.34s">☁️ Cloud</div>
-  <div class="cat-chip" data-cat="database" onclick="selectCategory(this)" style="animation-delay:.36s">🗃️ Database</div>
-  <div class="cat-chip" data-cat="chrome-ext" onclick="selectCategory(this)" style="animation-delay:.38s">🧩 Browser Ext</div>
-  <div class="cat-chip" data-cat="open-source" onclick="selectCategory(this)" style="animation-delay:.40s">💡 Open Source</div>
+<div class="cat-bar-wrap">
+  <div class="cat-scroll" id="catScroll"></div>
+</div>
+
+<div class="cat-count-wrap">
+  <div class="cat-count"><b id="catCount">4</b> repos found</div>
+  <div class="live-note"><span class="sw"></span>live · may lag ~10 min</div>
 </div>
 
 <div class="list-wrap">
-  <div class="list-head">
-    <div class="count"><b>0</b> repos found</div>
-    <div class="live-note"><span class="sw"></span>live · may lag ~10 min</div>
+
+  <div class="row" data-hue="blue" data-category="termux" style="animation-delay:.04s" onclick="openDetail(0, event)">
+    <span class="rank">#1</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">termux/</span>termux-app</div>
+      <p class="row-desc">Terminal emulator and Linux environment for Android, no root required — full package manager included.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>32.4k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>4.1k</span>
+        <span class="upd">· 2d ago</span>
+        <span class="lang-chip" style="background:var(--brand-soft);color:var(--brand);">C</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
   </div>
 
-  <div id="rows"></div>
+  <div class="row" data-hue="violet" data-category="rom" style="animation-delay:.10s" onclick="openDetail(1, event)">
+    <span class="rank">#2</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">tur-nip/</span>poco-custom-rom-tools</div>
+      <p class="row-desc">Scripts to flash and manage custom ROMs for POCO devices — handles fastboot, TWRP, and A/B partition switching.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>8.2k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>740</span>
+        <span class="upd">· 3mo ago</span>
+        <span class="lang-chip" style="background:var(--violet-soft);color:var(--violet);">Shell</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="coral" data-category="rom" style="animation-delay:.16s" onclick="openDetail(2, event)">
+    <span class="rank">#3</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">oldschool-dev/</span>rom-flasher-cli</div>
+      <p class="row-desc">Legacy CLI flashing tool, superseded by newer alternatives — kept for archival and reference purposes.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>3.1k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>510</span>
+        <span class="upd">· 2y ago</span>
+        <span class="lang-chip" style="background:#FFEDE6;color:var(--coral);">Python</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="teal" data-category="rom" style="animation-delay:.22s" onclick="openDetail(3, event)">
+    <span class="rank">#4</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">anon-dev/</span>micro-rom-patch</div>
+      <p class="row-desc">Small patch set for battery calibration on custom ROMs — lightweight and focused on one job.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>412</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>38</span>
+        <span class="upd">· 1mo ago</span>
+        <span class="lang-chip" style="background:#E1F7F5;color:var(--teal);">Kotlin</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="blue" data-category="ai-ml" style="animation-delay:.28s" onclick="openDetail(4, event)">
+    <span class="rank">#5</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">edge-run/</span>local-llm-toolkit</div>
+      <p class="row-desc">Run small language models fully offline on-device — quantized weights, no GPU required.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>6.7k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>590</span>
+        <span class="upd">· 5d ago</span>
+        <span class="lang-chip" style="background:var(--brand-soft);color:var(--brand);">Rust</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="violet" data-category="devops" style="animation-delay:.34s" onclick="openDetail(5, event)">
+    <span class="rank">#6</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">shipfast/</span>gh-actions-matrix</div>
+      <p class="row-desc">Reusable GitHub Actions matrix templates for multi-platform CI/CD — copy, paste, ship.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>2.3k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>210</span>
+        <span class="upd">· 12h ago</span>
+        <span class="lang-chip" style="background:var(--violet-soft);color:var(--violet);">YAML</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="empty-state" id="emptyState">
+    <div class="es-ring">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+    <div class="es-title">No cached repos in this category yet</div>
+    <p>RepoRadar hasn't pre-warmed this category yet — try searching for it directly above, results come live from GitHub.</p>
+  </div>
 </div>
 
 <footer>Results come from GitHub's live search and may lag a few minutes. Verdicts are an AI-based assessment, not a guarantee.</footer>
@@ -571,48 +659,15 @@
         <div class="stat-grid">
           <div class="stat-box"><b id="dStars">32.4k</b><span>Stars</span></div>
           <div class="stat-box"><b id="dForks">4.1k</b><span>Forks</span></div>
-          <div class="stat-box"><b id="dWatchers">—</b><span>Watchers</span></div>
-          <div class="stat-box"><b id="dIssuesStat">—</b><span>Open issues</span></div>
-          <div class="stat-box"><b id="dContributors">—</b><span>Contributors</span></div>
           <div class="stat-box"><b id="dUpdated">2d ago</b><span>Updated</span></div>
         </div>
-
-        <div class="info-chip-row">
-          <span class="info-chip lang" id="dLangChip">C</span>
-          <span class="info-chip" id="dLicenseChip">MIT</span>
-          <span class="info-chip archived" id="dArchivedChip" style="display:none;">Archived</span>
-        </div>
-
-        <div class="meta-line-row">
-          <div class="meta-line">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Created <span id="dCreated" style="color:var(--ink);font-weight:600;">—</span>
-          </div>
-          <div class="meta-line">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
-            Default branch <span id="dBranch" style="color:var(--ink);font-weight:600;">—</span>
-          </div>
-          <div class="meta-line">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/></svg>
-            Repo size <span id="dSize" style="color:var(--ink);font-weight:600;">—</span>
-          </div>
-          <div class="meta-line" id="dHomepageRow" style="display:none;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/></svg>
-            <a id="dHomepage" href="#" target="_blank" rel="noopener">—</a>
-          </div>
-        </div>
-
-        <div class="topics-row" id="dTopics"></div>
-
-        <div class="readme-label">From the README</div>
-        <p class="readme-preview" id="dReadme">—</p>
 
         <div class="btn-row">
           <a class="open-repo-btn" id="dOpenRepo" href="#" target="_blank" rel="noopener">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             Open repo
           </a>
-          <button class="get-ai-btn btn-sweep" onclick="runVerify(this)">
+          <button class="get-ai-btn" onclick="runVerify()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M8 21h8M12 17v4"/></svg>
             Get AI details
           </button>
@@ -651,124 +706,109 @@
 </div>
 
 <script>
-  // formats a raw count into GitHub-style short form: 850, 32.4k, 2.1M
-  function formatCount(n){
-    n = Number(n);
-    if (isNaN(n)) return '—';
-    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-    return String(n);
-  }
-
   const API_BASE = "https://reporadar-backend.onrender.com";
-  let repos = [];
+
+  const repos = [
+    { owner:'termux/', name:'termux-app', desc:'Terminal emulator and Linux environment for Android, no root required. Provides a package manager and a large collection of Unix utilities, with no rooting needed.', stars:'32.4k', forks:'4.1k', updated:'2d ago', verdict:'good', summary:"Actively maintained with frequent commits. Issues are answered quickly and the last release was recent — safe to use for new setups." },
+    { owner:'tur-nip/', name:'poco-custom-rom-tools', desc:'Scripts to flash and manage custom ROMs for POCO devices. Handles fastboot, TWRP, and A/B partition switching.', stars:'8.2k', forks:'740', updated:'3mo ago', verdict:'warn', summary:"Still works but updates have slowed down. A few open issues about newer firmware versions aren't addressed yet — proceed carefully and check the issue tracker first." },
+    { owner:'oldschool-dev/', name:'rom-flasher-cli', desc:'Legacy CLI flashing tool, superseded by newer alternatives. Kept for archival/reference purposes.', stars:'3.1k', forks:'510', updated:'2y ago', verdict:'bad', summary:"No commits in over two years and multiple unresolved issues about compatibility with current Android versions. Newer alternatives are recommended instead." },
+    { owner:'anon-dev/', name:'micro-rom-patch', desc:'Small patch set for battery calibration on custom ROMs. Lightweight and focused on one job.', stars:'412', forks:'38', updated:'1mo ago', verdict:'good', summary:"Small project but consistently maintained. The single maintainer responds to issues within a few days — a solid niche pick." },
+    { owner:'edge-run/', name:'local-llm-toolkit', desc:'Run small language models fully offline on-device. Quantized weights, no GPU required.', stars:'6.7k', forks:'590', updated:'5d ago', verdict:'good', summary:"Frequent commits and a growing contributor base. Documentation covers setup on both desktop and mobile-class hardware." },
+    { owner:'shipfast/', name:'gh-actions-matrix', desc:'Reusable GitHub Actions matrix templates for multi-platform CI/CD. Copy, paste, ship.', stars:'2.3k', forks:'210', updated:'12h ago', verdict:'good', summary:"Very active — commits within the last day and issues are triaged quickly. Safe pick for production pipelines." },
+  ];
 
   repos.forEach(r => { r.url = 'https://github.com/' + r.owner.replace(/\/$/, '') + '/' + r.name; });
 
-  function relTime(iso){
-    if (!iso) return '—';
-    const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-    if (d <= 0) return 'today';
-    if (d === 1) return '1d ago';
-    if (d < 30) return d + 'd ago';
-    if (d < 365) return Math.floor(d/30) + 'mo ago';
-    return Math.floor(d/365) + 'y ago';
-  }
+  // ================= CATEGORY FILTER SYSTEM =================
+  // IMPORTANT: this system never removes chips or rows from the DOM.
+  // Every click re-evaluates ALL rows against the newly selected category
+  // and only toggles the .row-hidden class. This is the fix for the bug
+  // where chips/rows used to vanish permanently after being filtered once.
+  const categories = [
+    { key:'trending',    label:'Trending',            color:'var(--brand)'  },
+    { key:'termux',       label:'Termux',              color:'var(--teal)'   },
+    { key:'rom',          label:'ROM',                 color:'var(--coral)'  },
+    { key:'ai-ml',        label:'AI / ML',             color:'var(--violet)' },
+    { key:'devops',       label:'DevOps',              color:'var(--gold)'   },
+    { key:'automation',   label:'Automation',          color:'var(--brand)'  },
+    { key:'webdev',       label:'Web Dev',             color:'var(--teal)'   },
+    { key:'mobile',       label:'Mobile',              color:'var(--coral)'  },
+    { key:'saas',         label:'SaaS',                color:'var(--violet)' },
+    { key:'cybersecurity',label:'Cybersecurity',       color:'var(--gold)'   },
+    { key:'data-science', label:'Data Science',        color:'var(--brand)'  },
+    { key:'blockchain',   label:'Blockchain',          color:'var(--teal)'   },
+    { key:'cli',          label:'CLI Tools',           color:'var(--coral)'  },
+    { key:'self-hosted',  label:'Self-hosted',         color:'var(--violet)' },
+    { key:'chrome-ext',   label:'Chrome Extensions',   color:'var(--gold)'   },
+    { key:'telegram-bots',label:'Telegram Bots',       color:'var(--brand)'  },
+  ];
 
-  function loadRepos(q, cat){
-    const container = document.getElementById('rows');
-    const countEl = document.querySelector('.list-head .count');
-    const query = (q || '').trim();
-    let url = API_BASE + '/api/search?';
-    if (cat && cat !== 'trending'){
-      url += 'category=' + encodeURIComponent(cat);
-    } else if (query){
-      url += 'q=' + encodeURIComponent(query);
-    } else {
-      url += 'q=' + encodeURIComponent('stars:>1000');
-    }
-    if (container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);font-size:13px;">Searching…</div>';
-    if (countEl) countEl.innerHTML = '<b>…</b> repos found';
-    fetch(url).then(r => r.json()).then(d => {
-      const results = d.results || [];
-      repos = results.map(r => ({
-        owner: (r.owner || '').replace(/\/$/, '') + '/',
-        name: r.name,
-        desc: r.desc || r.description || 'No description provided.',
-        stars: r.stars, forks: r.forks, updated: relTime(r.updated || r.updated_at || r.pushed_at),
-        url: r.url || ('https://github.com/' + (r.owner || '').replace(/\/$/, '') + '/' + r.name)
-      }));
-      renderRows();
-      if (countEl) countEl.innerHTML = '<b>' + repos.length + '</b> repos found';
-    }).catch(() => {
-      if (container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--bad);font-size:13px;">Something went wrong. Try again.</div>';
+  let activeCategory = 'trending';
+  const catScroll = document.getElementById('catScroll');
+  const catCountEl = document.getElementById('catCount');
+  const emptyStateEl = document.getElementById('emptyState');
+  const allRows = () => Array.from(document.querySelectorAll('.list-wrap .row'));
+
+  function renderCategoryChips(){
+    catScroll.innerHTML = '';
+    categories.forEach((cat, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'cat-chip' + (cat.key === activeCategory ? ' active' : '');
+      chip.style.animationDelay = (i * 0.035) + 's';
+      chip.dataset.key = cat.key;
+      chip.innerHTML = `<span class="cdot" style="background:${cat.color}"></span>${cat.label}`;
+      if (cat.key === activeCategory) chip.style.background = cat.color;
+      chip.addEventListener('click', (ev) => selectCategory(cat.key, ev.currentTarget));
+      catScroll.appendChild(chip);
     });
   }
 
-  function renderRows(){
-    const container = document.getElementById('rows');
-    if (!container) return;
-    if (!repos.length){
-      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);font-size:13px;">0 repos found</div>';
-      return;
-    }
-    const hues = ['blue','violet','teal','coral'];
-    container.innerHTML = repos.map((r, i) => `
-      <div class="row" data-hue="${hues[i % hues.length]}" style="animation-delay:${(i*0.05).toFixed(2)}s" onclick="openDetail(${i}, event)">
-        <span class="rank">#${i+1}</span>
-        <div class="row-main">
-          <div class="name"><span class="owner">${r.owner}</span>${r.name}</div>
-          <p class="row-desc">${r.desc}</p>
-          <div class="meta">
-            <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>${formatCount(r.stars)}</span>
-            <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>${formatCount(r.forks)}</span>
-            <span class="upd">· ${r.updated}</span>
-          </div>
-        </div>
-        <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
-        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-      </div>`).join('');
+  function selectCategory(key, chipEl){
+    activeCategory = key;
+
+    // re-evaluate ALL chips every time (fixes the "vanish forever" bug —
+    // previously only the newly-inactive chip may have been touched)
+    Array.from(catScroll.children).forEach(chip => {
+      const cat = categories.find(c => c.key === chip.dataset.key);
+      const isActive = chip.dataset.key === key;
+      chip.classList.toggle('active', isActive);
+      chip.style.background = isActive ? cat.color : '';
+    });
+
+    if (chipEl && typeof spawnParticles === 'function') spawnParticles(chipEl);
+
+    // re-evaluate ALL rows every time, same fix applied to the list
+    let visibleCount = 0;
+    let delay = 0;
+    allRows().forEach(row => {
+      const matches = key === 'trending' || row.dataset.category === key;
+      if (matches){
+        row.classList.remove('row-hidden');
+        row.classList.remove('row-filtering-in');
+        void row.offsetWidth; // reflow to restart animation
+        row.style.animationDelay = (delay * 0.05) + 's';
+        row.classList.add('row-filtering-in');
+        visibleCount++;
+        delay++;
+      } else {
+        row.classList.add('row-hidden');
+      }
+    });
+
+    catCountEl.textContent = visibleCount;
+    catCountEl.classList.remove('is-animating');
+    void catCountEl.offsetWidth;
+    catCountEl.classList.add('is-animating');
+
+    emptyStateEl.classList.toggle('show', visibleCount === 0);
   }
+
+  renderCategoryChips();
+  selectCategory('trending', null);
 
   let currentRepo = null;
   const overlay = document.getElementById('overlay');
   const backBtn = document.getElementById('backBtn');
-
-  function formatSize(kb){
-    if (kb >= 1024) return (kb / 1024).toFixed(1).replace(/\.0$/, '') + ' MB';
-    return kb + ' KB';
-  }
-
-  function applyRepoDetail(d){
-    if (!d) return;
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    set('dStars', formatCount(d.stars));
-    set('dForks', formatCount(d.forks));
-    set('dWatchers', formatCount(d.watchers));
-    set('dIssuesStat', formatCount(d.open_issues));
-    set('dContributors', formatCount(d.contributors));
-    set('dUpdated', relTime(d.pushed_at || d.updated_at));
-    set('dLangChip', d.language || 'Unknown');
-    set('dLicenseChip', d.license || 'None');
-    set('dArchivedChip', 'Archived');
-    document.getElementById('dArchivedChip').style.display = d.archived ? 'inline-flex' : 'none';
-    set('dCreated', (d.created_at || '').slice(0, 10));
-    set('dBranch', d.default_branch || 'main');
-    set('dSize', formatSize(d.size_kb || 0));
-    const homeRow = document.getElementById('dHomepageRow');
-    if (d.homepage){
-      homeRow.style.display = 'flex';
-      const hp = document.getElementById('dHomepage');
-      hp.textContent = d.homepage;
-      hp.href = (d.homepage.startsWith('http') ? '' : 'https://') + d.homepage;
-    } else {
-      homeRow.style.display = 'none';
-    }
-    const topicsWrap = document.getElementById('dTopics');
-    if (topicsWrap) topicsWrap.innerHTML = (d.topics || []).map(t => '<span class="topic-pill">' + t + '</span>').join('');
-    set('dReadme', (d.readme || '').slice(0, 400) || 'No README available.');
-    document.querySelectorAll('.stat-box').forEach(el => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
-  }
 
   function openDetail(i, ev){
     if (ev && ev.currentTarget){
@@ -781,47 +821,10 @@
     document.getElementById('dOwner').textContent = currentRepo.owner;
     document.getElementById('dName').textContent = currentRepo.name;
     document.getElementById('dDesc').textContent = currentRepo.desc;
-    document.getElementById('dStars').textContent = formatCount(currentRepo.stars);
-    document.getElementById('dForks').textContent = formatCount(currentRepo.forks);
+    document.getElementById('dStars').textContent = currentRepo.stars;
+    document.getElementById('dForks').textContent = currentRepo.forks;
     document.getElementById('dUpdated').textContent = currentRepo.updated;
-    document.getElementById('dWatchers').textContent = formatCount(currentRepo.watchers);
-    document.getElementById('dIssuesStat').textContent = formatCount(currentRepo.issues);
-    document.getElementById('dContributors').textContent = formatCount(currentRepo.contributors);
     document.getElementById('dOpenRepo').href = currentRepo.url;
-
-    document.getElementById('dLangChip').textContent = currentRepo.language;
-    document.getElementById('dLicenseChip').textContent = currentRepo.license;
-    document.getElementById('dArchivedChip').style.display = currentRepo.archived ? 'inline-flex' : 'none';
-
-    document.getElementById('dCreated').textContent = currentRepo.created;
-    document.getElementById('dBranch').textContent = currentRepo.defaultBranch;
-    document.getElementById('dSize').textContent = formatSize(currentRepo.size || 0);
-
-    const homeRow = document.getElementById('dHomepageRow');
-    if (currentRepo.homepage){
-      homeRow.style.display = 'flex';
-      document.getElementById('dHomepage').textContent = currentRepo.homepage;
-      document.getElementById('dHomepage').href = 'https://' + currentRepo.homepage;
-    } else {
-      homeRow.style.display = 'none';
-    }
-
-    const topicsWrap = document.getElementById('dTopics');
-    topicsWrap.innerHTML = (currentRepo.topics || []).map(t => '<span class="topic-pill">' + t + '</span>').join('');
-
-    document.getElementById('dReadme').textContent = currentRepo.readme || '';
-
-    document.querySelectorAll('.stat-box').forEach(el => {
-      el.style.animation = 'none';
-      void el.offsetWidth;
-      el.style.animation = '';
-    });
-
-    // fetch real detail from backend and map onto existing modal fields
-    const owner = (currentRepo.owner || '').replace(/\/$/, '');
-    fetch(`${API_BASE}/api/repo/${encodeURIComponent(owner)}/${encodeURIComponent(currentRepo.name)}`)
-      .then(r => r.json()).then(d => { if (d && d.detail) applyRepoDetail(d.detail); })
-      .catch(() => {});
 
     // reset AI panel to un-checked state
     document.getElementById('aiLoading').style.display = 'flex';
@@ -862,8 +865,7 @@
     backBtn.classList.toggle('hidden', which === 'detail');
   }
 
-  function runVerify(btn){
-    if (btn) runSweep(btn);
+  function runVerify(){
     showPanel('ai');
     const loading = document.getElementById('aiLoading');
     const result = document.getElementById('aiResult');
@@ -881,52 +883,45 @@
 
     const owner = (currentRepo.owner || '').replace(/\/$/, '');
     fetch(`${API_BASE}/api/verify?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(currentRepo.name)}`)
-      .then(r => r.json()).then(d => {
-        loading.style.display = 'none';
-        if (d.error){
+      .then(r => r.json())
+      .then(d => {
+        if (d.error || !d.verdict){
+          loading.style.display = 'none';
           badge.className = 'ai-verdict-badge bad';
           badge.innerHTML = '<span class="sw"></span>Unavailable';
-          modelTag.textContent = 'via AI';
+          maintained.textContent = '—'; maturity.textContent = '—';
+          community.textContent = '—'; docs.textContent = '—'; setup.textContent = '—';
+          reasoning.textContent = d.message || 'AI verdict could not be fetched right now. Try again shortly.';
+          modelTag.textContent = 'via RepoRadar';
           result.classList.add('show');
           return;
         }
         const v = (d.verdict || '').toLowerCase();
-        const vclass = v.includes('outdat') ? 'bad' : (v.includes('caution') || v.includes('warn')) ? 'warn' : 'good';
-        const vtext = vclass === 'bad' ? 'Outdated' : vclass === 'warn' ? 'Needs caution' : 'Working';
-        const ai = {
-          maintained: d.maintained || '—', maturity: d.maturity || '—',
-          community: d.community || '—', docs: d.docs || '—',
-          setup: d.setup || '—', reasoning: d.reasoning || d.summary || '—',
-          model: d.model || d.ai_provider || 'AI'
-        };
-        currentRepo.ai = ai;
-        currentRepo.verdict = vclass;
-        badge.className = 'ai-verdict-badge ' + vclass;
-        badge.innerHTML = '<span class="sw"></span>' + vtext;
-        maintained.textContent = ai.maintained;
-        maturity.textContent = ai.maturity;
-        community.textContent = ai.community;
-        docs.textContent = ai.docs;
-        setup.textContent = ai.setup;
-        reasoning.textContent = ai.reasoning;
-        modelTag.textContent = 'via ' + (ai.model || 'AI').replace(':free', '').split('/').pop();
+        const cls = v.indexOf('outdat') >= 0 ? 'bad' : (v.indexOf('caution') >= 0 || v.indexOf('warn') >= 0) ? 'warn' : 'good';
+        const label = cls === 'good' ? 'Working' : cls === 'warn' ? 'Needs caution' : 'Outdated';
+        loading.style.display = 'none';
+        badge.className = 'ai-verdict-badge ' + cls;
+        badge.innerHTML = '<span class="sw"></span>' + label;
+
+        // structured fields from backend (already mapped to same keys)
+        maintained.textContent = d.maintained || '—';
+        maturity.textContent = d.maturity || '—';
+        community.textContent = d.community || '—';
+        docs.textContent = d.docs || '—';
+        setup.textContent = d.setup || '—';
+        reasoning.textContent = d.reasoning || (d.summary || '—');
+        modelTag.textContent = 'via ' + (d.model || d.ai_provider || 'AI');
+
         result.classList.add('show');
-      }).catch(() => {
+      })
+      .catch(() => {
         loading.style.display = 'none';
         badge.className = 'ai-verdict-badge bad';
         badge.innerHTML = '<span class="sw"></span>Unavailable';
-        modelTag.textContent = 'via AI';
+        reasoning.textContent = 'Network error reaching RepoRadar. Check your connection and try again.';
+        modelTag.textContent = 'via RepoRadar';
         result.classList.add('show');
       });
-  }
-
-  function selectCategory(chip){
-    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    chip.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
-
-    const cat = chip.getAttribute('data-cat');
-    loadRepos('', cat);
   }
 
   function toggleUrlVerify(){
@@ -947,37 +942,27 @@
     const btn = document.getElementById('urlVerifyBtn');
     const label = document.getElementById('urlVerifyLabel');
     if (btn){
-      runSweep(btn);
-      btn.classList.add('loading');
+      btn.classList.remove('verifying');
+      void btn.offsetWidth;
+      btn.classList.add('verifying', 'loading');
       label.textContent = 'Verifying…';
     }
 
-    // ---- BACKEND HOOK (Hermes wires this) ----
-    // IMPORTANT UX RULE: the button must switch to loading state (done above,
-    // via .loading class + spinner) THE INSTANT the user clicks — before any
-    // network call starts. Do not wait for the API response to show feedback.
-    //
-    // 1. Validate this is a github.com/{owner}/{repo} URL.
-    // 2. Open the existing detail modal IMMEDIATELY (showPanel('detail'),
-    //    overlay open, lockScroll()) with a loading skeleton in place of the
-    //    repo fields — reuse the same loading pattern already used for
-    //    "Get AI details" (id="aiLoading": "Checking README, commits &
-    //    issues… / Asking Gemini… / Working").
-    // 3. THEN call POST /api/verify-url { url } in the background.
-    // 4. When the response arrives, populate the modal fields and stop the
-    //    button's loading state:
-    //      btn.classList.remove('loading'); label.textContent = 'Verify';
-    // 5. On error (invalid URL / repo not found), stop loading state and
-    //    show a small inline error message under the input (using existing
-    //    --bad color), do not leave the button stuck in loading forever.
+    document.getElementById('aiLoading').style.display = 'flex';
+    document.getElementById('aiResult').classList.remove('show');
+
+    // open the detail modal IMMEDIATELY with a loading skeleton (per UX rule)
+    openDetailLikeUrl(url);
+
     fetch(`${API_BASE}/api/verify-url`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ url })
     }).then(r => r.json()).then(d => {
+      btn.classList.remove('loading');
+      label.textContent = 'Verify';
+
       if (d.error){
-        btn.classList.remove('loading');
-        label.textContent = 'Verify';
         input.style.borderColor = 'var(--bad)';
         let err = document.getElementById('urlVerifyErr');
         if (!err){
@@ -987,51 +972,74 @@
           document.getElementById('urlVerifyBox').appendChild(err);
         }
         err.textContent = d.message || 'Something went wrong. Try again.';
+        closeModal();
         return;
       }
       input.style.borderColor = '';
       const err = document.getElementById('urlVerifyErr');
       if (err) err.remove();
-      const idx = repos.length;
-      repos.push({
-        owner: d.owner, name: d.name, desc: d.desc,
-        stars: d.stars_raw ?? d.stars, forks: d.forks_raw ?? d.forks, updated: d.updated,
-        url: d.url,
-        verdict: d.verdict === 'Working' ? 'good' : d.verdict === 'Needs Caution' ? 'warn' : 'bad',
-        watchers: d.watchers, issues: d.open_issues, contributors: d.contributors,
-        language: d.language, license: d.license, archived: d.archived,
-        created: d.created_at, defaultBranch: d.default_branch, size: d.size_kb,
-        homepage: d.homepage, topics: d.topics || [], readme: d.readme,
-        ai: {
-          maintained: d.maintained || '—', maturity: d.maturity || '—',
-          community: d.community || '—', docs: d.docs || '—',
-          setup: d.setup || '—', reasoning: d.reasoning || d.summary,
-          model: d.model || d.ai_provider || 'AI'
-        }
-      });
-      btn.classList.remove('loading');
-      label.textContent = 'Verify';
-      openDetail(idx, { currentTarget: null });
+
+      // populate the modal detail fields (3-box layout)
+      document.getElementById('dOwner').textContent = d.owner;
+      document.getElementById('dName').textContent = d.name;
+      document.getElementById('dDesc').textContent = d.desc || 'No description provided.';
+      document.getElementById('dStars').textContent = d.stars;
+      document.getElementById('dForks').textContent = d.forks;
+      document.getElementById('dUpdated').textContent = d.updated || '—';
+      document.getElementById('dOpenRepo').href = d.url;
+
+      // store for runVerify()
+      currentRepo = {
+        owner: d.owner, name: d.name, url: d.url,
+        verdict: d.verdict === 'Working' ? 'good' : d.verdict === 'Needs Caution' ? 'warn' : 'bad'
+      };
+
+      // auto-run AI verify on the freshly loaded repo
+      runVerify();
     }).catch(() => {
       btn.classList.remove('loading');
       label.textContent = 'Verify';
+      closeModal();
     });
   }
 
-  // triggers the sweep-glide + ring-contract click animation (shared by
-  // search, verify, and get-ai-details buttons)
-  function runSweep(btn){
-    if (!btn) return;
-    btn.classList.remove('sweep-run');
-    void btn.offsetWidth;
-    btn.classList.add('sweep-run');
-    setTimeout(() => btn.classList.remove('sweep-run'), 620);
+  function openDetailLikeUrl(url){
+    // lightweight clone of openDetail's modal-open + skeleton, no list index
+    showPanel('detail');
+    overlay.classList.add('open');
+    lockScroll();
   }
 
   function pulseSearch(btn){
-    runSweep(btn);
-    const inp = document.querySelector('.search input');
-    loadRepos(inp ? inp.value : '');
+    btn.classList.remove('searching');
+    void btn.offsetWidth;
+    btn.classList.add('searching');
+    spawnParticles(btn);
+    setTimeout(() => btn.classList.remove('searching'), 500);
+  }
+
+  function spawnParticles(btn){
+    const rect = btn.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const colors = ['#3454FF','#8B5CF6'];
+    const count = 6;
+    for (let i = 0; i < count; i++){
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
+      const dist = 26 + Math.random() * 14;
+      const px = Math.cos(angle) * dist;
+      const py = Math.sin(angle) * dist;
+      p.style.setProperty('--px', px + 'px');
+      p.style.setProperty('--py', py + 'px');
+      p.style.left = cx + 'px';
+      p.style.top = cy + 'px';
+      p.style.width = p.style.height = (3.5 + Math.random() * 2) + 'px';
+      p.style.background = colors[i % colors.length];
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 600);
+    }
   }
 
   function toggleSave(btn){
@@ -1040,9 +1048,6 @@
     void btn.offsetWidth;
     btn.classList.add('pop');
   }
-
-  // initial load: trending repos on page open
-  loadRepos('', 'trending');
 </script>
 
 </body>
