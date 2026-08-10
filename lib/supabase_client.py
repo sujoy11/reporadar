@@ -67,10 +67,16 @@ def get_verified(owner, name):
     return _MEM_VERIFIED.get(key)
 
 
-def set_verified(owner, name, verdict, summary, provider, stars):
+def set_verified(owner, name, verdict, summary, provider, stars,
+                 maintained=None, maturity=None, community=None, docs=None,
+                 setup=None, reasoning=None, model=None):
     row = {"owner": owner, "name": name, "verdict": verdict,
            "summary": summary, "ai_provider": provider,
-           "github_stars_at_time": stars}
+           "github_stars_at_time": stars,
+           "model": model or provider,
+           "maintained": maintained, "maturity": maturity,
+           "community": community, "docs": docs, "setup": setup,
+           "reasoning": reasoning}
     if _client:
         try:
             _client.table("verified_repos").upsert(row, on_conflict="owner,name").execute()

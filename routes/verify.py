@@ -1,6 +1,7 @@
-"""Verify route: cache-first AI repo analysis (Gemini -> Mistral fallback)."""
+"""Verify route: cache-first AI repo analysis (OpenRouter -> Mistral -> Gemini fallback)."""
 from fastapi import APIRouter
 import os
+import json
 from lib import github as gh
 from lib import ai as ai_lib
 from lib import supabase_client as db
@@ -18,6 +19,7 @@ async def verify(owner: str = "", name: str = ""):
     cached = db.get_verified(owner, name)
     if cached and cached.get("reasoning"):
         return {"source": "cache", "owner": owner, "name": name,
+                "model": cached.get("model") or cached.get("ai_provider") or "AI",
                 "verdict": cached.get("verdict"), "summary": cached.get("summary"),
                 "ai_provider": cached.get("ai_provider"),
                 "maintained": cached.get("maintained"), "maturity": cached.get("maturity"),
@@ -34,42 +36,19 @@ async def verify(owner: str = "", name: str = ""):
 
     # 3) AI
     try:
-        text, provider = ai_lib.verify_repo(full, detail)
+        fields, model = ai_lib.verify_repo(full, detail)
     except RuntimeError as e:
         return {"error": "ai_unavailable", "message": str(e)}
 
-    # 4) parse structured fields from the AI text (match numbered lines 1-7)
-    import re as _re
-    verdict = "Needs Caution ⚠️"
-    maintained = ""
-    maturity = ""
-    community = ""
-    docs = ""
-    setup = ""
-    reasoning = ""
-    def clean(s):
-        s = _re.sub(r'^\s*\d+\.\s*', '', s)         # strip "1. "
-        s = _re.sub(r'\*\*', '', s)                  # strip bold
-        s = _re.sub(r'^(MAINTAINED|MATURITY|COMMUNITY|DOCS|SETUP|REASONING)\s*:\s*', '', s, flags=_re.I)  # strip label
-        return s.strip()
-    for line in text.splitlines():
-        u = line.upper()
-        if u.startswith("1") and "MAINTAINED:" in u:
-            maintained = clean(line.split(":", 1)[-1])
-        elif u.startswith("2") and "MATURITY:" in u:
-            maturity = clean(line.split(":", 1)[-1])
-        elif u.startswith("3") and "COMMUNITY:" in u:
-            community = clean(line.split(":", 1)[-1])
-        elif u.startswith("4") and "DOCS:" in u:
-            docs = clean(line.split(":", 1)[-1])
-        elif u.startswith("5") and "SETUP:" in u:
-            setup = clean(line.split(":", 1)[-1])
-        elif u.startswith("7") and "REASONING:" in u:
-            reasoning = clean(line.split(":", 1)[-1])
-        elif u.startswith("6") or "VERDICT:" in u:
-            verdict = clean(line.split(":", 1)[-1]) or verdict
-    db.set_verified(owner, name, verdict, text, provider, detail.get("stars", 0))
+    verdict = fields.get("verdict") or "Needs Caution"
+    summary = json.dumps(fields, ensure_ascii=False)
+    db.set_verified(owner, name, verdict, summary, model, detail.get("stars", 0),
+                   maintained=fields.get("maintained"), maturity=fields.get("maturity"),
+                   community=fields.get("community"), docs=fields.get("docs"),
+                   setup=fields.get("setup"), reasoning=fields.get("reasoning"))
     return {"source": "live", "owner": owner, "name": name,
-            "verdict": verdict, "summary": text, "ai_provider": provider,
-            "maintained": maintained, "maturity": maturity, "community": community,
-            "docs": docs, "setup": setup, "reasoning": reasoning}
+            "model": model, "summary": summary, "ai_provider": model,
+            "verdict": verdict, "maintained": fields.get("maintained"),
+            "maturity": fields.get("maturity"), "community": fields.get("community"),
+            "docs": fields.get("docs"), "setup": fields.get("setup"),
+            "reasoning": fields.get("reasoning")}

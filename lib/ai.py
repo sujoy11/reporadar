@@ -1,11 +1,28 @@
-"""AI verification: Gemini primary, Mistral fallback. Both free tier."""
+"""AI verification: OpenRouter (free gemma-4-26b) primary, Mistral + Gemini fallback.
+Returns structured JSON fields, not raw text. Real model slug is returned so the
+frontend can show the exact model that produced the verdict.
+"""
 import os
 import urllib.request
 import json
 
+OPENROUTER_MODEL = "google/gemma-4-26b-a4b-it:free"
+MISTRAL_MODEL = "mistral-small-latest"
+GEMINI_MODEL = "gemini-1.5-flash"
 
 PROMPT = """You are analyzing a GitHub repository based ONLY on the data provided.
-Do not invent facts. Answer in 7 short parts.
+Do not invent facts. Reply with ONLY a single JSON object (no markdown, no code
+fences, no commentary) with exactly these keys:
+
+{
+  "maintained": "short phrase: recent commit/push activity (e.g. 'Active — commits within the last week')",
+  "maturity": "short phrase: maturity/stability/adoption (e.g. 'Production-ready, widely used')",
+  "community": "short phrase: issue/PR responsiveness (e.g. 'Active — issues answered within days')",
+  "docs": "short phrase: README/docs quality (e.g. 'Clear README with setup steps')",
+  "setup": "Simple / Moderate / Complex",
+  "verdict": "Working / Needs Caution / Outdated",
+  "reasoning": "one concise sentence explaining WHY the verdict is what it is"
+}
 
 Repository: {full_name}
 Description: {description}
@@ -14,15 +31,22 @@ Recent commits: {commits}
 Latest release: {latest_release}
 Last push: {pushed_at}
 Archived: {archived}
+"""
 
-Answer (keep each line short, plain text, no markdown):
-1. MAINTAINED: Yes/No/Unclear + one short reason
-2. MATURITY: Production-ready / Experimental / Early-stage
-3. COMMUNITY: one short phrase (e.g. "Active — issues answered in days" or "Quiet — few recent discussions")
-4. DOCS: one short phrase (e.g. "Clear README with setup steps" or "Sparse — minimal docs")
-5. SETUP: Simple / Moderate / Complex
-6. VERDICT: Working ✅ / Needs Caution ⚠️ / Outdated ❌
-7. REASONING: one concise sentence explaining WHY the verdict is what it is."""
+
+def _parse_json(text):
+    """Extract a JSON object from an LLM response (handles stray prose/fences)."""
+    s = text.strip()
+    # strip code fences if any
+    if s.startswith("```"):
+        s = s.split("```", 2)[1]
+        if s.startswith("json"):
+            s = s[4:]
+    start = s.find("{")
+    end = s.rfind("}")
+    if start != -1 and end != -1:
+        s = s[start:end + 1]
+    return json.loads(s)
 
 
 def _call_openrouter(full_name, data):
@@ -39,9 +63,10 @@ def _call_openrouter(full_name, data):
         archived=data.get("archived"),
     )
     body = json.dumps({
-        "model": "google/gemma-4-26b-a4b-it:free",
+        "model": OPENROUTER_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3,
+        "response_format": {"type": "json_object"},
     }).encode()
     req = urllib.request.Request(
         "https://openrouter.ai/api/v1/chat/completions",
@@ -50,7 +75,8 @@ def _call_openrouter(full_name, data):
         method="POST",
     )
     r = urllib.request.urlopen(req, timeout=40)
-    return json.loads(r.read().decode())["choices"][0]["message"]["content"], "openrouter"
+    content = json.loads(r.read().decode())["choices"][0]["message"]["content"]
+    return _parse_json(content), OPENROUTER_MODEL
 
 
 def _call_mistral(full_name, data):
@@ -67,9 +93,10 @@ def _call_mistral(full_name, data):
         archived=data.get("archived"),
     )
     body = json.dumps({
-        "model": "mistral-small-latest",
+        "model": MISTRAL_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3,
+        "response_format": {"type": "json_object"},
     }).encode()
     req = urllib.request.Request(
         "https://api.mistral.ai/v1/chat/completions",
@@ -78,7 +105,8 @@ def _call_mistral(full_name, data):
         method="POST",
     )
     r = urllib.request.urlopen(req, timeout=30)
-    return json.loads(r.read().decode())["choices"][0]["message"]["content"], "mistral"
+    content = json.loads(r.read().decode())["choices"][0]["message"]["content"]
+    return _parse_json(content), MISTRAL_MODEL
 
 
 def _call_gemini(full_name, data):
@@ -94,23 +122,36 @@ def _call_gemini(full_name, data):
         pushed_at=data.get("pushed_at") or "unknown",
         archived=data.get("archived"),
     )
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
     body = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode()
     req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
     r = urllib.request.urlopen(req, timeout=30)
     txt = json.loads(r.read().decode())["candidates"][0]["content"]["parts"][0]["text"]
-    return txt, "gemini"
+    return _parse_json(txt), GEMINI_MODEL
 
 
 def verify_repo(full_name, data):
-    """OpenRouter (free gemma-4-26b) primary, Mistral + Gemini fallback. Returns (verdict_text, provider)."""
-    try:
-        return _call_openrouter(full_name, data)
-    except Exception:
+    """OpenRouter (free gemma-4-26b) primary, Mistral + Gemini fallback.
+    Returns (fields_dict, real_model_slug). fields_dict has the 7 JSON keys
+    (maintained, maturity, community, docs, setup, verdict, reasoning).
+    """
+    last_err = None
+    for fn in (_call_openrouter, _call_mistral, _call_gemini):
         try:
-            return _call_mistral(full_name, data)
-        except Exception:
-            try:
-                return _call_gemini(full_name, data)
-            except Exception as e:
-                raise RuntimeError(f"ai_unavailable: {e}")
+            fields, model = fn(full_name, data)
+            # normalise keys defensively
+            out = {
+                "maintained": str(fields.get("maintained", "")).strip(),
+                "maturity": str(fields.get("maturity", "")).strip(),
+                "community": str(fields.get("community", "")).strip(),
+                "docs": str(fields.get("docs", "")).strip(),
+                "setup": str(fields.get("setup", "")).strip(),
+                "verdict": str(fields.get("verdict", "")).strip(),
+                "reasoning": str(fields.get("reasoning", "")).strip(),
+            }
+            if not out["reasoning"]:
+                raise ValueError("empty reasoning")
+            return out, model
+        except Exception as e:
+            last_err = e
+    raise RuntimeError(f"ai_unavailable: {last_err}")

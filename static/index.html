@@ -621,7 +621,7 @@
           maintained: d.maintained || '—', maturity: d.maturity || '—',
           community: d.community || '—', docs: d.docs || '—',
           setup: d.setup || '—', reasoning: d.reasoning || d.summary || '—',
-          model: d.ai_provider || 'AI'
+          model: d.model || d.ai_provider || 'AI'
         };
         currentRepo.ai = ai;
         currentRepo.verdict = vclass;
@@ -641,7 +641,7 @@
       docs.textContent = ai.docs;
       setup.textContent = ai.setup;
       reasoning.textContent = ai.reasoning;
-      modelTag.textContent = 'via ' + ai.model;
+      modelTag.textContent = 'via ' + (ai.model || 'AI').replace(':free','').split('/').pop();
       result.classList.add('show');
     }
   }
@@ -699,7 +699,7 @@
           maintained: d.maintained || '—', maturity: d.maturity || '—',
           community: d.community || '—', docs: d.docs || '—',
           setup: d.setup || '—', reasoning: d.reasoning || d.summary,
-          model: d.ai_provider || 'AI'
+          model: d.model || d.ai_provider || 'AI'
         }
       });
       if (btn){ btn.classList.remove('loading'); label.textContent = 'Verify'; }

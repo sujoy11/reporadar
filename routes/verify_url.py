@@ -6,6 +6,7 @@ Returns the same shape as a repos[] entry used by the frontend modal.
 from fastapi import APIRouter, Request
 import os
 import re
+import json
 import urllib.parse
 from lib import github as gh
 from lib import ai as ai_lib
@@ -65,45 +66,44 @@ async def verify_url(request: Request):
     cached = db.get_verified(owner, name)
     verdict_raw = ""
     summary = ""
-    provider = "Gemini"
+    provider = "AI"
     maintained = maturity = community = docs = setup = reasoning = ""
+    model = "AI"
     if cached and cached.get("reasoning"):
         verdict_raw = cached.get("verdict") or ""
         summary = cached.get("summary") or ""
-        provider = cached.get("ai_provider") or "Gemini"
+        provider = cached.get("ai_provider") or "AI"
+        model = cached.get("model") or provider
+        maintained = cached.get("maintained") or ""
+        maturity = cached.get("maturity") or ""
+        community = cached.get("community") or ""
+        docs = cached.get("docs") or ""
+        setup = cached.get("setup") or ""
+        reasoning = cached.get("reasoning") or ""
     else:
         try:
             detail = gh.get_repo_detail(full, token)
         except Exception as e:
             return {"error": "fetch_failed", "message": str(e)}
         try:
-            text, provider = ai_lib.verify_repo(full, detail)
+            fields, used_model = ai_lib.verify_repo(full, detail)
         except RuntimeError as e:
             return {"error": "ai_unavailable", "message": str(e)}
-        import re as _re
-        for line in text.splitlines():
-            u = line.upper()
-            if "VERDICT:" in u or u.startswith("6"):
-                verdict_raw = _re.sub(r'^\s*\d+\.\s*', '', line.split(":", 1)[-1]).strip()
-                break
-        summary = text
+        verdict_raw = fields.get("verdict") or ""
+        summary = json.dumps(fields, ensure_ascii=False)
+        provider = used_model
+        model = used_model
+        maintained = fields.get("maintained") or ""
+        maturity = fields.get("maturity") or ""
+        community = fields.get("community") or ""
+        docs = fields.get("docs") or ""
+        setup = fields.get("setup") or ""
+        reasoning = fields.get("reasoning") or ""
         stars = detail.get("stars") or 0
-        # parse structured fields
-        for line in text.splitlines():
-            u = line.upper()
-            if u.startswith("1") and "MAINTAINED:" in u:
-                maintained = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
-            elif u.startswith("2") and "MATURITY:" in u:
-                maturity = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
-            elif u.startswith("3") and "COMMUNITY:" in u:
-                community = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
-            elif u.startswith("4") and "DOCS:" in u:
-                docs = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
-            elif u.startswith("5") and "SETUP:" in u:
-                setup = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
-            elif u.startswith("7") and "REASONING:" in u:
-                reasoning = _re.sub(r'^\s*\d+\.\s*', '', line.split(":",1)[-1]).strip()
-        db.set_verified(owner, name, verdict_raw, text, provider, stars)
+        db.set_verified(owner, name, verdict_raw, summary, model, stars,
+                       maintained=maintained, maturity=maturity, community=community,
+                       docs=docs, setup=setup, reasoning=reasoning, model=model)
+
 
     raw = verdict_raw.lower()
     if "outdat" in raw:
