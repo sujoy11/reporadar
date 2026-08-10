@@ -91,6 +91,7 @@ def get_repo_detail(full_name, token):
             "size_kb": repo.get("size"),
             "homepage": repo.get("homepage") or "",
             "archived": repo.get("archived", False),
+            "topics": repo.get("topics", []) or [],
             "description": repo.get("description") or "",
         })
     except Exception:
