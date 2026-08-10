@@ -718,6 +718,7 @@
   const API_BASE = 'https://reporadar-backend.onrender.com';
   let repos = [];
   let currentDetail = null;
+  let detailReqId = 0; // guards against out-of-order async detail responses
 
   // ---- safe HTML escaping for any GitHub-sourced text (topics, file names) ----
   function esc(t){
@@ -1012,13 +1013,15 @@
     // BACKEND HOOK wired: real GET /api/repo/:owner/:name (includes sanitized
     // README html, contents listing, stats, cached AI verdict)
     currentDetail = null;
+    const reqId = ++detailReqId;
     fetch(API_BASE + '/api/repo/' + encodeURIComponent(owner) + '/' + encodeURIComponent(name))
       .then(r => r.json())
       .then(d => {
+        if (reqId !== detailReqId) return; // a newer request superseded this one
         if (d.error){ readmeBox.innerHTML = '<p>Failed to load repository details.</p>'; return; }
         populateDetail(d);
       })
-      .catch(() => { readmeBox.innerHTML = '<p>Failed to load repository details.</p>'; });
+      .catch(() => { if (reqId === detailReqId) readmeBox.innerHTML = '<p>Failed to load repository details.</p>'; });
   }
 
   let scrollY = 0;
@@ -1155,6 +1158,7 @@
       return;
     }
     // show modal immediately (skeleton)
+    detailReqId++; // supersede any in-flight openDetail fetch so it can't overwrite this
     document.getElementById('dCatLabel').textContent = 'Repository';
     const catBadge = document.getElementById('dCatBadge');
     catBadge.style.background = 'var(--brand)';
