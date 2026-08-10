@@ -709,7 +709,7 @@
         forks: fmtCount(r.forks),
         updated: relTime(r.updated_at),
         language: r.language || 'Unknown',
-        url: r.html_url || ('https://github.com/' + r.owner + '/' + r.name),
+        url: r.html_url || r.url || ('https://github.com/' + r.owner + '/' + r.name),
         verdict: 'good',
         summary: ''
       }));
