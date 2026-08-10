@@ -168,63 +168,47 @@
   .url-verify-btn.loading{ opacity:.85; pointer-events:none; }
   .url-verify-btn:hover{ box-shadow:0 12px 26px -8px rgba(52,84,255,.6); transform:translateY(-1px); background-position:100% 0%; }
   .url-verify-btn:active{ transform:scale(.94); }
-  .url-verify-btn::after{
-    content:''; position:absolute; inset:0; border-radius:12px; pointer-events:none;
-    box-shadow:0 0 0 0 rgba(139,92,246,0); opacity:0;
-  }
-  .url-verify-btn.verifying::after{ animation:go-shock .55s cubic-bezier(.2,.8,.2,1); }
-  .url-verify-btn.verifying{ animation:btn-press .5s cubic-bezier(.3,1.4,.3,1); }
-  @keyframes btn-press{
-    0%{ transform:scale(1); }
-    30%{ transform:scale(.92); }
-    60%{ transform:scale(1.04); }
-    100%{ transform:scale(1); }
-  }
 
   .search-go{
     position:relative; flex:none; width:44px; height:44px; border-radius:12px; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     box-shadow:0 10px 22px -10px rgba(52,84,255,.55);
     transition:transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, background-position .5s ease;
-    isolation:isolate;
-  }
-  .search-go::before{
-    content:''; position:absolute; inset:-5px; border-radius:15px; z-index:-1;
-    background:conic-gradient(from 0deg, var(--brand), var(--violet), var(--brand));
-    opacity:.32; filter:blur(7px);
-    animation:halo-spin 3.4s linear infinite;
-  }
-  @keyframes halo-spin{ to{ transform:rotate(360deg); } }
-  .search-go::after{
-    content:''; position:absolute; inset:0; border-radius:12px; pointer-events:none;
-    box-shadow:0 0 0 0 rgba(52,84,255,0); opacity:0;
-  }
-  .search-go.searching::after{ animation:go-shock .55s cubic-bezier(.2,.8,.2,1); }
-  @keyframes go-shock{
-    0%{ box-shadow:0 0 0 0 rgba(52,84,255,.4); opacity:1; }
-    100%{ box-shadow:0 0 0 16px rgba(139,92,246,0); opacity:0; }
+    overflow:hidden;
   }
   .search-go:hover{ box-shadow:0 12px 26px -8px rgba(52,84,255,.65); transform:translateY(-1px); background-position:100% 0%; }
-  .search-go:hover::before{ opacity:.5; }
   .search-go:active{ transform:scale(.9); }
-  .search-go svg{ transition:transform .35s cubic-bezier(.3,1.6,.4,1); position:relative; }
-  .search-go:hover svg{ transform:scale(1.12) rotate(-8deg); }
-  .search-go.searching svg{ animation:go-search .5s cubic-bezier(.3,1.4,.3,1); }
-  @keyframes go-search{
-    0%{ transform:scale(1) rotate(0); }
-    30%{ transform:scale(.72) rotate(-18deg); }
-    60%{ transform:scale(1.15) rotate(4deg); }
-    100%{ transform:scale(1) rotate(0); }
-  }
 
-  .particle{
-    position:fixed; width:6px; height:6px; border-radius:50%;
-    pointer-events:none; z-index:9999; top:0; left:0;
-    animation:particle-burst .6s cubic-bezier(.25,.8,.35,1) forwards;
+  /* ---- NEW click animation: a soft light "sweep" glides across the
+     button, and a thin ring contracts inward toward the icon — minimal,
+     no particles, no spinning halo. Applies to search-go, url-verify-btn,
+     get-ai-btn (all share the .btn-sweep class). ---- */
+  .btn-sweep{ position:relative; overflow:hidden; isolation:isolate; }
+  .btn-sweep::before{
+    content:''; position:absolute; top:0; bottom:0; left:-45%; width:35%;
+    background:linear-gradient(115deg, transparent, rgba(255,255,255,.65), transparent);
+    transform:skewX(-18deg); pointer-events:none; opacity:0; z-index:1;
   }
-  @keyframes particle-burst{
-    0%{ transform:translate(0,0) scale(1); opacity:1; }
-    100%{ transform:translate(var(--px), var(--py)) scale(0); opacity:0; }
+  .btn-sweep.sweep-run::before{ animation:sweep-glide .6s ease forwards; }
+  @keyframes sweep-glide{
+    0%{ left:-45%; opacity:.9; }
+    100%{ left:130%; opacity:0; }
+  }
+  .btn-sweep::after{
+    content:''; position:absolute; inset:0; margin:auto; border-radius:inherit;
+    border:1.5px solid rgba(255,255,255,.9); pointer-events:none; opacity:0;
+  }
+  .btn-sweep.sweep-run::after{ animation:ring-contract .5s cubic-bezier(.2,.7,.3,1); }
+  @keyframes ring-contract{
+    0%{ transform:scale(1.5); opacity:0; }
+    35%{ opacity:.8; }
+    100%{ transform:scale(1); opacity:0; }
+  }
+  .btn-sweep.sweep-run{ animation:btn-dip .4s ease; }
+  @keyframes btn-dip{
+    0%{ transform:scale(1); }
+    40%{ transform:scale(.94); }
+    100%{ transform:scale(1); }
   }
 
   .list-wrap{ max-width:680px; margin:26px auto 60px; padding:0 24px; }
@@ -369,12 +353,55 @@
     transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease;
   }
   .stat-box:hover{ transform:translateY(-3px); box-shadow:0 10px 20px -12px rgba(20,18,10,.25); }
-  .stat-box:nth-child(1){ animation-delay:.05s; }
-  .stat-box:nth-child(2){ animation-delay:.11s; }
-  .stat-box:nth-child(3){ animation-delay:.17s; }
+  .stat-box:nth-child(1){ animation-delay:.04s; }
+  .stat-box:nth-child(2){ animation-delay:.08s; }
+  .stat-box:nth-child(3){ animation-delay:.12s; }
+  .stat-box:nth-child(4){ animation-delay:.16s; }
+  .stat-box:nth-child(5){ animation-delay:.20s; }
+  .stat-box:nth-child(6){ animation-delay:.24s; }
   @keyframes stat-rise{ to{ opacity:1; transform:translateY(0) scale(1); } }
-  .stat-box b{ display:block; font-weight:800; font-size:17px; }
-  .stat-box span{ font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
+  .stat-box b{ display:block; font-weight:800; font-size:16px; }
+  .stat-box span{ font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
+
+  .info-chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .info-chip{
+    font-size:11px; font-weight:700; padding:5px 11px; border-radius:999px;
+    background:var(--paper); color:var(--ink-soft); border:1px solid var(--line);
+    opacity:0; transform:translateY(6px);
+    animation:chip-fade .35s ease forwards;
+  }
+  .info-chip:nth-child(1){ animation-delay:.30s; }
+  .info-chip:nth-child(2){ animation-delay:.35s; }
+  .info-chip:nth-child(3){ animation-delay:.40s; }
+  @keyframes chip-fade{ to{ opacity:1; transform:translateY(0); } }
+  .info-chip.lang{ background:var(--brand-soft); color:var(--brand); border-color:transparent; }
+  .info-chip.archived{ background:var(--bad-soft); color:var(--bad); border-color:transparent; }
+
+  .meta-line-row{ display:flex; flex-direction:column; gap:7px; margin-top:14px; }
+  .meta-line{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft); }
+  .meta-line svg{ flex:none; color:var(--ink-faint); }
+  .meta-line a{ color:var(--brand); text-decoration:none; font-weight:600; }
+  .meta-line a:hover{ text-decoration:underline; }
+
+  .topics-row{ display:flex; gap:7px; flex-wrap:wrap; margin-top:14px; }
+  .topic-pill{
+    font-size:10.5px; font-weight:600; padding:4px 10px; border-radius:999px;
+    background:var(--violet-soft); color:var(--violet);
+    opacity:0; transform:scale(.9);
+    animation:topic-pop .3s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  @keyframes topic-pop{ to{ opacity:1; transform:scale(1); } }
+
+  .readme-preview{
+    margin-top:16px; padding:13px 15px; border-radius:14px;
+    background:var(--paper); border:1px solid var(--line);
+    font-size:12.5px; color:var(--ink-soft); line-height:1.6;
+    display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .readme-label{
+    font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--ink-faint); margin:16px 0 6px;
+  }
 
   .btn-row{ display:flex; gap:10px; margin-top:22px; }
 
@@ -459,7 +486,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" value="" placeholder="termux tools, custom rom poco…">
     </div>
-    <button class="search-go" aria-label="Search" onclick="pulseSearch(this)">
+    <button class="search-go btn-sweep" aria-label="Search" onclick="pulseSearch(this)">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
   </div>
@@ -475,7 +502,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         <input type="text" id="directUrlInput" placeholder="https://github.com/owner/repo">
       </div>
-      <button class="url-verify-btn" id="urlVerifyBtn" onclick="verifyDirectUrl()">
+      <button class="url-verify-btn btn-sweep" id="urlVerifyBtn" onclick="verifyDirectUrl()">
         <span class="btn-spinner" id="urlVerifySpinner"></span>
         <span id="urlVerifyLabel">Verify</span>
       </button>
@@ -508,11 +535,73 @@
 
 <div class="list-wrap">
   <div class="list-head">
-    <div class="count"><b>0</b> repos found</div>
+    <div class="count"><b>24</b> repos found</div>
     <div class="live-note"><span class="sw"></span>live · may lag ~10 min</div>
   </div>
 
-  <div id="rows"></div>
+  <div class="row" data-hue="blue" style="animation-delay:.04s" onclick="openDetail(0, event)">
+    <span class="rank">#1</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">termux/</span>termux-app</div>
+      <p class="row-desc">Terminal emulator and Linux environment for Android, no root required — full package manager included.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>32.4k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>4.1k</span>
+        <span class="upd">· 2d ago</span>
+        <span class="lang-chip" style="background:var(--brand-soft);color:var(--brand);">C</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="violet" style="animation-delay:.10s" onclick="openDetail(1, event)">
+    <span class="rank">#2</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">tur-nip/</span>poco-custom-rom-tools</div>
+      <p class="row-desc">Scripts to flash and manage custom ROMs for POCO devices — handles fastboot, TWRP, and A/B partition switching.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>8.2k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>740</span>
+        <span class="upd">· 3mo ago</span>
+        <span class="lang-chip" style="background:var(--violet-soft);color:var(--violet);">Shell</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="coral" style="animation-delay:.16s" onclick="openDetail(2, event)">
+    <span class="rank">#3</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">oldschool-dev/</span>rom-flasher-cli</div>
+      <p class="row-desc">Legacy CLI flashing tool, superseded by newer alternatives — kept for archival and reference purposes.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>3.1k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>510</span>
+        <span class="upd">· 2y ago</span>
+        <span class="lang-chip" style="background:#FFEDE6;color:var(--coral);">Python</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="teal" style="animation-delay:.22s" onclick="openDetail(3, event)">
+    <span class="rank">#4</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">anon-dev/</span>micro-rom-patch</div>
+      <p class="row-desc">Small patch set for battery calibration on custom ROMs — lightweight and focused on one job.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>412</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>38</span>
+        <span class="upd">· 1mo ago</span>
+        <span class="lang-chip" style="background:#E1F7F5;color:var(--teal);">Kotlin</span>
+      </div>
+    </div>
+    <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
 </div>
 
 <footer>Results come from GitHub's live search and may lag a few minutes. Verdicts are an AI-based assessment, not a guarantee.</footer>
@@ -544,15 +633,48 @@
         <div class="stat-grid">
           <div class="stat-box"><b id="dStars">32.4k</b><span>Stars</span></div>
           <div class="stat-box"><b id="dForks">4.1k</b><span>Forks</span></div>
+          <div class="stat-box"><b id="dWatchers">—</b><span>Watchers</span></div>
+          <div class="stat-box"><b id="dIssuesStat">—</b><span>Open issues</span></div>
+          <div class="stat-box"><b id="dContributors">—</b><span>Contributors</span></div>
           <div class="stat-box"><b id="dUpdated">2d ago</b><span>Updated</span></div>
         </div>
+
+        <div class="info-chip-row">
+          <span class="info-chip lang" id="dLangChip">C</span>
+          <span class="info-chip" id="dLicenseChip">MIT</span>
+          <span class="info-chip archived" id="dArchivedChip" style="display:none;">Archived</span>
+        </div>
+
+        <div class="meta-line-row">
+          <div class="meta-line">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Created <span id="dCreated" style="color:var(--ink);font-weight:600;">—</span>
+          </div>
+          <div class="meta-line">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+            Default branch <span id="dBranch" style="color:var(--ink);font-weight:600;">—</span>
+          </div>
+          <div class="meta-line">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/></svg>
+            Repo size <span id="dSize" style="color:var(--ink);font-weight:600;">—</span>
+          </div>
+          <div class="meta-line" id="dHomepageRow" style="display:none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/></svg>
+            <a id="dHomepage" href="#" target="_blank" rel="noopener">—</a>
+          </div>
+        </div>
+
+        <div class="topics-row" id="dTopics"></div>
+
+        <div class="readme-label">From the README</div>
+        <p class="readme-preview" id="dReadme">—</p>
 
         <div class="btn-row">
           <a class="open-repo-btn" id="dOpenRepo" href="#" target="_blank" rel="noopener">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             Open repo
           </a>
-          <button class="get-ai-btn" onclick="runVerify()">
+          <button class="get-ai-btn btn-sweep" onclick="runVerify(this)">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M8 21h8M12 17v4"/></svg>
             Get AI details
           </button>
@@ -591,14 +713,124 @@
 </div>
 
 <script>
+  // formats a raw count into GitHub-style short form: 850, 32.4k, 2.1M
+  function formatCount(n){
+    n = Number(n);
+    if (isNaN(n)) return '—';
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return String(n);
+  }
+
   const API_BASE = "https://reporadar-backend.onrender.com";
   let repos = [];
 
   repos.forEach(r => { r.url = 'https://github.com/' + r.owner.replace(/\/$/, '') + '/' + r.name; });
 
+  function relTime(iso){
+    if (!iso) return '—';
+    const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    if (d <= 0) return 'today';
+    if (d === 1) return '1d ago';
+    if (d < 30) return d + 'd ago';
+    if (d < 365) return Math.floor(d/30) + 'mo ago';
+    return Math.floor(d/365) + 'y ago';
+  }
+
+  function loadRepos(q, cat){
+    const container = document.getElementById('rows');
+    const countEl = document.querySelector('.list-head .count');
+    const query = (q || '').trim();
+    let url = API_BASE + '/api/search?';
+    if (cat && cat !== 'trending'){
+      url += 'category=' + encodeURIComponent(cat);
+    } else if (query){
+      url += 'q=' + encodeURIComponent(query);
+    } else {
+      url += 'q=' + encodeURIComponent('stars:>1000');
+    }
+    if (container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);font-size:13px;">Searching…</div>';
+    if (countEl) countEl.innerHTML = '<b>…</b> repos found';
+    fetch(url).then(r => r.json()).then(d => {
+      const results = d.results || [];
+      repos = results.map(r => ({
+        owner: (r.owner || '').replace(/\/$/, '') + '/',
+        name: r.name,
+        desc: r.desc || r.description || 'No description provided.',
+        stars: r.stars, forks: r.forks, updated: relTime(r.updated || r.updated_at || r.pushed_at),
+        url: r.url || ('https://github.com/' + (r.owner || '').replace(/\/$/, '') + '/' + r.name)
+      }));
+      renderRows();
+      if (countEl) countEl.innerHTML = '<b>' + repos.length + '</b> repos found';
+    }).catch(() => {
+      if (container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--bad);font-size:13px;">Something went wrong. Try again.</div>';
+    });
+  }
+
+  function renderRows(){
+    const container = document.getElementById('rows');
+    if (!container) return;
+    if (!repos.length){
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);font-size:13px;">0 repos found</div>';
+      return;
+    }
+    const hues = ['blue','violet','teal','coral'];
+    container.innerHTML = repos.map((r, i) => `
+      <div class="row" data-hue="${hues[i % hues.length]}" style="animation-delay:${(i*0.05).toFixed(2)}s" onclick="openDetail(${i}, event)">
+        <span class="rank">#${i+1}</span>
+        <div class="row-main">
+          <div class="name"><span class="owner">${r.owner}</span>${r.name}</div>
+          <p class="row-desc">${r.desc}</p>
+          <div class="meta">
+            <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>${formatCount(r.stars)}</span>
+            <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>${formatCount(r.forks)}</span>
+            <span class="upd">· ${r.updated}</span>
+          </div>
+        </div>
+        <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+      </div>`).join('');
+  }
+
   let currentRepo = null;
   const overlay = document.getElementById('overlay');
   const backBtn = document.getElementById('backBtn');
+
+  function formatSize(kb){
+    if (kb >= 1024) return (kb / 1024).toFixed(1).replace(/\.0$/, '') + ' MB';
+    return kb + ' KB';
+  }
+
+  function applyRepoDetail(d){
+    if (!d) return;
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('dStars', formatCount(d.stars));
+    set('dForks', formatCount(d.forks));
+    set('dWatchers', formatCount(d.watchers));
+    set('dIssuesStat', formatCount(d.open_issues));
+    set('dContributors', formatCount(d.contributors));
+    set('dUpdated', relTime(d.pushed_at || d.updated_at));
+    set('dLangChip', d.language || 'Unknown');
+    set('dLicenseChip', d.license || 'None');
+    set('dArchivedChip', 'Archived');
+    document.getElementById('dArchivedChip').style.display = d.archived ? 'inline-flex' : 'none';
+    set('dCreated', (d.created_at || '').slice(0, 10));
+    set('dBranch', d.default_branch || 'main');
+    set('dSize', formatSize(d.size_kb || 0));
+    const homeRow = document.getElementById('dHomepageRow');
+    if (d.homepage){
+      homeRow.style.display = 'flex';
+      const hp = document.getElementById('dHomepage');
+      hp.textContent = d.homepage;
+      hp.href = (d.homepage.startsWith('http') ? '' : 'https://') + d.homepage;
+    } else {
+      homeRow.style.display = 'none';
+    }
+    const topicsWrap = document.getElementById('dTopics');
+    if (topicsWrap) topicsWrap.innerHTML = (d.topics || []).map(t => '<span class="topic-pill">' + t + '</span>').join('');
+    set('dReadme', (d.readme || '').slice(0, 400) || 'No README available.');
+    document.querySelectorAll('.stat-box').forEach(el => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; });
+  }
 
   function openDetail(i, ev){
     if (ev && ev.currentTarget){
@@ -611,16 +843,47 @@
     document.getElementById('dOwner').textContent = currentRepo.owner;
     document.getElementById('dName').textContent = currentRepo.name;
     document.getElementById('dDesc').textContent = currentRepo.desc;
-    document.getElementById('dStars').textContent = currentRepo.stars;
-    document.getElementById('dForks').textContent = currentRepo.forks;
+    document.getElementById('dStars').textContent = formatCount(currentRepo.stars);
+    document.getElementById('dForks').textContent = formatCount(currentRepo.forks);
     document.getElementById('dUpdated').textContent = currentRepo.updated;
+    document.getElementById('dWatchers').textContent = formatCount(currentRepo.watchers);
+    document.getElementById('dIssuesStat').textContent = formatCount(currentRepo.issues);
+    document.getElementById('dContributors').textContent = formatCount(currentRepo.contributors);
     document.getElementById('dOpenRepo').href = currentRepo.url;
+
+    document.getElementById('dLangChip').textContent = currentRepo.language;
+    document.getElementById('dLicenseChip').textContent = currentRepo.license;
+    document.getElementById('dArchivedChip').style.display = currentRepo.archived ? 'inline-flex' : 'none';
+
+    document.getElementById('dCreated').textContent = currentRepo.created;
+    document.getElementById('dBranch').textContent = currentRepo.defaultBranch;
+    document.getElementById('dSize').textContent = formatSize(currentRepo.size);
+
+    const homeRow = document.getElementById('dHomepageRow');
+    if (currentRepo.homepage){
+      homeRow.style.display = 'flex';
+      document.getElementById('dHomepage').textContent = currentRepo.homepage;
+      document.getElementById('dHomepage').href = 'https://' + currentRepo.homepage;
+    } else {
+      homeRow.style.display = 'none';
+    }
+
+    const topicsWrap = document.getElementById('dTopics');
+    topicsWrap.innerHTML = currentRepo.topics.map(t => '<span class="topic-pill">' + t + '</span>').join('');
+
+    document.getElementById('dReadme').textContent = currentRepo.readme;
 
     document.querySelectorAll('.stat-box').forEach(el => {
       el.style.animation = 'none';
       void el.offsetWidth;
       el.style.animation = '';
     });
+
+    // fetch real detail from backend and map onto existing modal fields
+    const owner = (currentRepo.owner || '').replace(/\/$/, '');
+    fetch(`${API_BASE}/api/repo/${encodeURIComponent(owner)}/${encodeURIComponent(currentRepo.name)}`)
+      .then(r => r.json()).then(d => { if (d && d.detail) applyRepoDetail(d.detail); })
+      .catch(() => {});
 
     // reset AI panel to un-checked state
     document.getElementById('aiLoading').style.display = 'flex';
@@ -661,7 +924,8 @@
     backBtn.classList.toggle('hidden', which === 'detail');
   }
 
-  function runVerify(){
+  function runVerify(btn){
+    if (btn) runSweep(btn);
     showPanel('ai');
     const loading = document.getElementById('aiLoading');
     const result = document.getElementById('aiResult');
@@ -723,75 +987,8 @@
     chip.classList.add('active');
     chip.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
 
-    // On category select, call GET /api/search?category={cat}
     const cat = chip.getAttribute('data-cat');
     loadRepos('', cat);
-  }
-
-  function relTime(iso){
-    if (!iso) return '—';
-    const then = new Date(iso).getTime();
-    const days = Math.floor((Date.now() - then) / 86400000);
-    if (days <= 0) return 'today';
-    if (days === 1) return '1d ago';
-    if (days < 30) return days + 'd ago';
-    if (days < 365) return Math.floor(days/30) + 'mo ago';
-    return Math.floor(days/365) + 'y ago';
-  }
-
-  function loadRepos(q, cat){
-    const container = document.getElementById('rows');
-    const countEl = document.querySelector('.list-head .count');
-    const query = (q || '').trim();
-    let url = API_BASE + '/api/search?';
-    if (cat && cat !== 'trending'){
-      url += 'category=' + encodeURIComponent(cat);
-    } else if (query){
-      url += 'q=' + encodeURIComponent(query);
-    } else {
-      url += 'q=' + encodeURIComponent('stars:>1000');
-    }
-    if (container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);font-size:13px;">Searching…</div>';
-    if (countEl) countEl.innerHTML = '<b>…</b> repos found';
-    fetch(url).then(r => r.json()).then(d => {
-      const results = d.results || [];
-      repos = results.map(r => ({
-        owner: (r.owner || '').replace(/\/$/, '') + '/',
-        name: r.name,
-        desc: r.desc || r.description || 'No description provided.',
-        stars: r.stars, forks: r.forks, updated: relTime(r.updated || r.updated_at || r.pushed_at),
-        url: r.url || ('https://github.com/' + (r.owner || '').replace(/\/$/, '') + '/' + r.name)
-      }));
-      renderRows();
-      if (countEl) countEl.innerHTML = '<b>' + repos.length + '</b> repos found';
-    }).catch(() => {
-      if (container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--bad);font-size:13px;">Something went wrong. Try again.</div>';
-    });
-  }
-
-  function renderRows(){
-    const container = document.getElementById('rows');
-    if (!container) return;
-    if (!repos.length){
-      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-faint);font-size:13px;">0 repos found</div>';
-      return;
-    }
-    const hues = ['blue','violet','teal','coral'];
-    container.innerHTML = repos.map((r, i) => `
-      <div class="row" data-hue="${hues[i % hues.length]}" style="animation-delay:${(i*0.05).toFixed(2)}s" onclick="openDetail(${i}, event)">
-        <span class="rank">#${i+1}</span>
-        <div class="row-main">
-          <div class="name"><span class="owner">${r.owner}</span>${r.name}</div>
-          <p class="row-desc">${r.desc}</p>
-          <div class="meta">
-            <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>${r.stars}</span>
-            <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>${r.forks}</span>
-            <span class="upd">· ${r.updated}</span>
-          </div>
-        </div>
-        <button class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
-        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-      </div>`).join('');
   }
 
   function toggleUrlVerify(){
@@ -812,12 +1009,29 @@
     const btn = document.getElementById('urlVerifyBtn');
     const label = document.getElementById('urlVerifyLabel');
     if (btn){
-      btn.classList.remove('verifying');
-      void btn.offsetWidth;
-      btn.classList.add('verifying', 'loading');
+      runSweep(btn);
+      btn.classList.add('loading');
       label.textContent = 'Verifying…';
     }
 
+    // ---- BACKEND HOOK (Hermes wires this) ----
+    // IMPORTANT UX RULE: the button must switch to loading state (done above,
+    // via .loading class + spinner) THE INSTANT the user clicks — before any
+    // network call starts. Do not wait for the API response to show feedback.
+    //
+    // 1. Validate this is a github.com/{owner}/{repo} URL.
+    // 2. Open the existing detail modal IMMEDIATELY (showPanel('detail'),
+    //    overlay open, lockScroll()) with a loading skeleton in place of the
+    //    repo fields — reuse the same loading pattern already used for
+    //    "Get AI details" (id="aiLoading": "Checking README, commits &
+    //    issues… / Asking Gemini… / Working").
+    // 3. THEN call POST /api/verify-url { url } in the background.
+    // 4. When the response arrives, populate the modal fields and stop the
+    //    button's loading state:
+    //      btn.classList.remove('loading'); label.textContent = 'Verify';
+    // 5. On error (invalid URL / repo not found), stop loading state and
+    //    show a small inline error message under the input (using existing
+    //    --bad color), do not leave the button stuck in loading forever.
     fetch(`${API_BASE}/api/verify-url`, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -843,9 +1057,13 @@
       const idx = repos.length;
       repos.push({
         owner: d.owner, name: d.name, desc: d.desc,
-        stars: d.stars, forks: d.forks, updated: d.updated,
+        stars: d.stars_raw ?? d.stars, forks: d.forks_raw ?? d.forks, updated: d.updated,
         url: d.url,
         verdict: d.verdict === 'Working' ? 'good' : d.verdict === 'Needs Caution' ? 'warn' : 'bad',
+        watchers: d.watchers, issues: d.open_issues, contributors: d.contributors,
+        language: d.language, license: d.license, archived: d.archived,
+        created: d.created_at, defaultBranch: d.default_branch, size: d.size_kb,
+        homepage: d.homepage, topics: d.topics || [], readme: d.readme,
         ai: {
           maintained: d.maintained || '—', maturity: d.maturity || '—',
           community: d.community || '—', docs: d.docs || '—',
@@ -862,38 +1080,20 @@
     });
   }
 
-  function pulseSearch(btn){
-    btn.classList.remove('searching');
+  // triggers the sweep-glide + ring-contract click animation (shared by
+  // search, verify, and get-ai-details buttons)
+  function runSweep(btn){
+    if (!btn) return;
+    btn.classList.remove('sweep-run');
     void btn.offsetWidth;
-    btn.classList.add('searching');
-    spawnParticles(btn);
-    const inp = document.querySelector('.search input');
-    loadRepos(inp ? inp.value : '');
-    setTimeout(() => btn.classList.remove('searching'), 500);
+    btn.classList.add('sweep-run');
+    setTimeout(() => btn.classList.remove('sweep-run'), 620);
   }
 
-  function spawnParticles(btn){
-    const rect = btn.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const colors = ['#3454FF','#8B5CF6'];
-    const count = 6;
-    for (let i = 0; i < count; i++){
-      const p = document.createElement('div');
-      p.className = 'particle';
-      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.3;
-      const dist = 26 + Math.random() * 14;
-      const px = Math.cos(angle) * dist;
-      const py = Math.sin(angle) * dist;
-      p.style.setProperty('--px', px + 'px');
-      p.style.setProperty('--py', py + 'px');
-      p.style.left = cx + 'px';
-      p.style.top = cy + 'px';
-      p.style.width = p.style.height = (3.5 + Math.random() * 2) + 'px';
-      p.style.background = colors[i % colors.length];
-      document.body.appendChild(p);
-      setTimeout(() => p.remove(), 600);
-    }
+  function pulseSearch(btn){
+    runSweep(btn);
+    const inp = document.querySelector('.search input');
+    loadRepos(inp ? inp.value : '');
   }
 
   function toggleSave(btn){

@@ -1,8 +1,10 @@
 """GitHub API helpers: search (rate-limited) + core repo detail fetch."""
 import urllib.request
 import urllib.error
+import urllib.parse
 import json
 import os
+import re
 
 
 def _headers(token, accept="application/vnd.github+json"):
@@ -78,17 +80,32 @@ def get_repo_detail(full_name, token):
         out.update({
             "stars": repo.get("stargazers_count"),
             "forks": repo.get("forks_count"),
+            "watchers": repo.get("subscribers_count"),
             "open_issues": repo.get("open_issues_count"),
             "language": repo.get("language") or "Unknown",
             "license": (repo.get("license") or {}).get("spdx_id"),
             "html_url": repo.get("html_url"),
             "created_at": repo.get("created_at"),
             "pushed_at": repo.get("pushed_at"),
+            "default_branch": repo.get("default_branch"),
+            "size_kb": repo.get("size"),
+            "homepage": repo.get("homepage") or "",
             "archived": repo.get("archived", False),
             "description": repo.get("description") or "",
         })
     except Exception:
         pass
+
+    # Contributors count (last page link header -> total)
+    try:
+        req = urllib.request.Request(base + "/contributors?per_page=1&anon=false",
+                                     headers=_headers(token))
+        resp = urllib.request.urlopen(req, timeout=20)
+        link = resp.headers.get("Link") or ""
+        m = re.search(r'[?&]page=(\d+)>;\s*rel="last"', link)
+        out["contributors"] = int(m.group(1)) if m else len(json.loads(resp.read().decode()))
+    except Exception:
+        out["contributors"] = None
 
     # README (first 2000 chars)
     try:
@@ -114,6 +131,3 @@ def get_repo_detail(full_name, token):
         out["latest_release"] = None
 
     return out
-
-
-import urllib.parse  # noqa: E402  (used above)

@@ -22,4 +22,30 @@ async def repo_detail(owner: str = "", name: str = ""):
     if cached:
         detail["verdict"] = cached.get("verdict")
         detail["ai_summary"] = cached.get("summary")
-    return {"owner": owner, "name": name, "detail": detail}
+    # normalize fields the frontend modal expects (raw numbers — frontend
+    # formats via its own formatCount(), never pre-formatted strings)
+    return {
+        "owner": owner,
+        "name": name,
+        "detail": {
+            "stars": detail.get("stars"),
+            "forks": detail.get("forks"),
+            "watchers": detail.get("watchers"),
+            "open_issues": detail.get("open_issues"),
+            "contributors": detail.get("contributors"),
+            "language": detail.get("language") or "Unknown",
+            "license": detail.get("license") or "None",
+            "archived": detail.get("archived", False),
+            "created_at": detail.get("created_at"),
+            "pushed_at": detail.get("pushed_at"),
+            "default_branch": detail.get("default_branch") or "main",
+            "size_kb": detail.get("size_kb"),
+            "homepage": detail.get("homepage") or "",
+            "html_url": detail.get("html_url"),
+            "description": detail.get("description") or "",
+            "topics": detail.get("topics", []),
+            "readme": (detail.get("readme") or "")[:400],
+            "verdict": detail.get("verdict"),
+            "ai_summary": detail.get("ai_summary"),
+        },
+    }
