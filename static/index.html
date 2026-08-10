@@ -387,14 +387,72 @@
   @keyframes panel-in{ from{ opacity:0; transform:translateX(10px); } to{ opacity:1; transform:translateX(0); } }
 
   .d-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .d-cat-badge{
+    display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700;
+    padding:5px 11px; border-radius:999px; margin-bottom:10px;
+  }
+  .d-cat-badge .cdot{ width:6px; height:6px; border-radius:50%; }
   .d-name{ font-weight:800; font-size:20px; }
   .d-owner{ color:var(--ink-soft); font-weight:500; font-size:14px; display:block; margin-bottom:2px; }
   .d-desc{ font-size:14px; color:var(--ink-soft); line-height:1.65; margin-top:12px; }
+
+  .d-chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+  .d-chip{ font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:999px; }
 
   .stat-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:20px; }
   .stat-box{ background:var(--paper); border-radius:14px; padding:12px; text-align:center; }
   .stat-box b{ display:block; font-weight:800; font-size:17px; }
   .stat-box span{ font-size:10.5px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.04em; }
+
+  .d-meta-list{ display:flex; flex-direction:column; gap:2px; margin-top:18px; }
+  .d-meta-row{
+    display:flex; align-items:center; gap:10px; padding:9px 2px;
+    font-size:13px; color:var(--ink-soft); border-bottom:1px solid var(--line);
+  }
+  .d-meta-row:last-child{ border-bottom:none; }
+  .d-meta-row svg{ flex:none; color:var(--ink-faint); }
+  .d-meta-row b{ color:var(--ink); font-weight:700; }
+  .d-meta-row a{ color:var(--brand); font-weight:600; word-break:break-all; }
+
+  .d-topics{ display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; }
+  .d-topic-chip{
+    font-size:11.5px; font-weight:600; padding:5px 12px; border-radius:999px;
+    background:var(--brand-soft); color:var(--brand);
+  }
+
+  .d-section-title{
+    font-size:11px; font-weight:800; color:var(--ink-faint); text-transform:uppercase;
+    letter-spacing:.05em; margin:24px 0 10px;
+  }
+
+  .d-file-list{ display:flex; flex-direction:column; gap:1px; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .d-file-row{
+    display:flex; align-items:center; gap:10px; padding:11px 13px; font-size:13px;
+    background:var(--card); border-bottom:1px solid var(--line);
+  }
+  .d-file-row:last-child{ border-bottom:none; }
+  .d-file-row svg{ flex:none; color:var(--ink-faint); }
+  .d-file-row.is-dir svg{ color:var(--brand); }
+  .d-file-row .fname{ color:var(--ink); font-weight:600; }
+  .d-file-row .fsize{ margin-left:auto; color:var(--ink-faint); font-size:11.5px; }
+
+  .d-readme-box{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:16px; font-size:13px; color:var(--ink-soft); line-height:1.7;
+    max-height:220px; overflow-y:auto;
+  }
+  .d-readme-box h1, .d-readme-box h2, .d-readme-box h3{ font-size:14px; color:var(--ink); margin:0 0 8px; }
+  .d-readme-box p{ margin:0 0 10px; }
+  .d-readme-box code{
+    background:var(--brand-soft); color:var(--brand); padding:1px 6px; border-radius:5px; font-size:12px;
+  }
+  .d-readme-skeleton{ display:flex; flex-direction:column; gap:8px; }
+  .d-readme-skeleton .sk-line{
+    height:11px; border-radius:6px;
+    background:linear-gradient(90deg, var(--line) 25%, #F3F1E6 37%, var(--line) 63%);
+    background-size:400% 100%; animation:sk-shimmer 1.4s ease-in-out infinite;
+  }
+  @keyframes sk-shimmer{ 0%{ background-position:100% 0; } 100%{ background-position:0 0; } }
 
   /* sticky action-button footer — stays visible no matter how long the
      description/AI content above it scrolls. bottom:0 anchors it to the
@@ -490,7 +548,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" value="" placeholder="termux tools, custom rom poco…">
     </div>
-    <button class="search-go" aria-label="Search" onclick="pulseSearch(this)">
+    <button type="button" class="search-go" aria-label="Search" onclick="pulseSearch(this)">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </button>
   </div>
@@ -506,7 +564,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
         <input type="text" id="directUrlInput" placeholder="https://github.com/owner/repo">
       </div>
-      <button class="url-verify-btn" id="urlVerifyBtn" onclick="verifyDirectUrl()">
+      <button type="button" class="url-verify-btn" id="urlVerifyBtn" onclick="verifyDirectUrl()">
         <span class="btn-spinner" id="urlVerifySpinner"></span>
         <span id="urlVerifyLabel">Verify</span>
       </button>
@@ -525,9 +583,103 @@
 
 <div class="list-wrap">
 
-  <!-- live repo rows are injected here by JS (replaces the 6 static demo rows) -->
+  <div class="row" data-hue="blue" data-category="termux" style="animation-delay:.04s" onclick="openDetail(0, event)">
+    <span class="rank">#1</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">termux/</span>termux-app</div>
+      <p class="row-desc">Terminal emulator and Linux environment for Android, no root required — full package manager included.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>32.4k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>4.1k</span>
+        <span class="upd">· 2d ago</span>
+        <span class="lang-chip" style="background:var(--brand-soft);color:var(--brand);">C</span>
+      </div>
+    </div>
+    <button type="button" class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
 
-<div class="empty-state" id="emptyState">
+  <div class="row" data-hue="violet" data-category="rom" style="animation-delay:.10s" onclick="openDetail(1, event)">
+    <span class="rank">#2</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">tur-nip/</span>poco-custom-rom-tools</div>
+      <p class="row-desc">Scripts to flash and manage custom ROMs for POCO devices — handles fastboot, TWRP, and A/B partition switching.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>8.2k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>740</span>
+        <span class="upd">· 3mo ago</span>
+        <span class="lang-chip" style="background:var(--violet-soft);color:var(--violet);">Shell</span>
+      </div>
+    </div>
+    <button type="button" class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="coral" data-category="rom" style="animation-delay:.16s" onclick="openDetail(2, event)">
+    <span class="rank">#3</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">oldschool-dev/</span>rom-flasher-cli</div>
+      <p class="row-desc">Legacy CLI flashing tool, superseded by newer alternatives — kept for archival and reference purposes.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>3.1k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>510</span>
+        <span class="upd">· 2y ago</span>
+        <span class="lang-chip" style="background:#FFEDE6;color:var(--coral);">Python</span>
+      </div>
+    </div>
+    <button type="button" class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="teal" data-category="rom" style="animation-delay:.22s" onclick="openDetail(3, event)">
+    <span class="rank">#4</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">anon-dev/</span>micro-rom-patch</div>
+      <p class="row-desc">Small patch set for battery calibration on custom ROMs — lightweight and focused on one job.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>412</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>38</span>
+        <span class="upd">· 1mo ago</span>
+        <span class="lang-chip" style="background:#E1F7F5;color:var(--teal);">Kotlin</span>
+      </div>
+    </div>
+    <button type="button" class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="blue" data-category="ai-ml" style="animation-delay:.28s" onclick="openDetail(4, event)">
+    <span class="rank">#5</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">edge-run/</span>local-llm-toolkit</div>
+      <p class="row-desc">Run small language models fully offline on-device — quantized weights, no GPU required.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>6.7k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>590</span>
+        <span class="upd">· 5d ago</span>
+        <span class="lang-chip" style="background:var(--brand-soft);color:var(--brand);">Rust</span>
+      </div>
+    </div>
+    <button type="button" class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="row" data-hue="violet" data-category="devops" style="animation-delay:.34s" onclick="openDetail(5, event)">
+    <span class="rank">#6</span>
+    <div class="row-main">
+      <div class="name"><span class="owner">shipfast/</span>gh-actions-matrix</div>
+      <p class="row-desc">Reusable GitHub Actions matrix templates for multi-platform CI/CD — copy, paste, ship.</p>
+      <div class="meta">
+        <span class="stars"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>2.3k</span>
+        <span class="forks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>210</span>
+        <span class="upd">· 12h ago</span>
+        <span class="lang-chip" style="background:var(--violet-soft);color:var(--violet);">YAML</span>
+      </div>
+    </div>
+    <button type="button" class="save-btn" onclick="event.stopPropagation();toggleSave(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg></button>
+    <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+  </div>
+
+  <div class="empty-state" id="emptyState">
     <div class="es-ring">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </div>
@@ -542,11 +694,11 @@
 <div class="overlay" id="overlay" onclick="if(event.target===this) closeModal()">
   <div class="modal">
     <div class="modal-head">
-      <button class="back-btn hidden" id="backBtn" onclick="showPanel('detail')">
+      <button type="button" class="back-btn hidden" id="backBtn" onclick="showPanel('detail')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <span class="m-title" id="modalTitle">Repo details</span>
-      <button class="close-btn" onclick="closeModal()">
+      <button type="button" class="close-btn" onclick="closeModal()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -556,16 +708,61 @@
       <div class="panel active" id="panelDetail">
         <div class="d-top">
           <div>
-            <span class="d-owner" id="dOwner">termux/</span>
-            <span class="d-name" id="dName">termux-app</span>
+            <span class="d-cat-badge" id="dCatBadge"><span class="cdot"></span><span id="dCatLabel">Termux</span></span>
+            <div>
+              <span class="d-owner" id="dOwner">termux/</span>
+              <span class="d-name" id="dName">termux-app</span>
+            </div>
           </div>
         </div>
         <p class="d-desc" id="dDesc">Terminal emulator and Linux environment for Android, no root required. Provides a package manager and a large collection of Unix utilities, with no rooting needed.</p>
 
+        <div class="d-chip-row">
+          <span class="d-chip" id="dLangChip" style="background:var(--brand-soft);color:var(--brand);">C</span>
+          <span class="d-chip" id="dLicenseChip" style="background:var(--paper);color:var(--ink-soft);">Apache-2.0</span>
+        </div>
+
         <div class="stat-grid">
           <div class="stat-box"><b id="dStars">32.4k</b><span>Stars</span></div>
           <div class="stat-box"><b id="dForks">4.1k</b><span>Forks</span></div>
+          <div class="stat-box"><b id="dWatchers">2.9k</b><span>Watchers</span></div>
+          <div class="stat-box"><b id="dIssues">148</b><span>Open issues</span></div>
+          <div class="stat-box"><b id="dContributors">312</b><span>Contributors</span></div>
           <div class="stat-box"><b id="dUpdated">2d ago</b><span>Updated</span></div>
+        </div>
+
+        <div class="d-meta-list">
+          <div class="d-meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Created <b id="dCreated">2015-01-19</b>
+          </div>
+          <div class="d-meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+            Default branch <b id="dBranch">main</b>
+          </div>
+          <div class="d-meta-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/></svg>
+            Repo size <b id="dSize">48 MB</b>
+          </div>
+          <div class="d-meta-row" id="dHomepageRow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <a id="dHomepage" href="#" target="_blank" rel="noopener">termux.dev</a>
+          </div>
+        </div>
+
+        <div class="d-topics" id="dTopics"></div>
+
+        <div class="d-section-title">Top-level files</div>
+        <div class="d-file-list" id="dFileList"></div>
+
+        <div class="d-section-title">From the README</div>
+        <div class="d-readme-box" id="dReadmeBox">
+          <div class="d-readme-skeleton">
+            <div class="sk-line" style="width:60%"></div>
+            <div class="sk-line" style="width:92%"></div>
+            <div class="sk-line" style="width:84%"></div>
+            <div class="sk-line" style="width:70%"></div>
+          </div>
         </div>
 
         <div class="btn-row">
@@ -573,7 +770,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
             Open repo
           </a>
-          <button class="get-ai-btn" onclick="runVerify()">
+          <button type="button" class="get-ai-btn" onclick="runVerify()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M8 21h8M12 17v4"/></svg>
             Get AI details
           </button>
@@ -612,12 +809,17 @@
 </div>
 
 <script>
-  const API_BASE = "https://reporadar-backend.onrender.com";
-
+  const API_BASE = 'https://reporadar-backend.onrender.com';
   let repos = [];
+  let currentDetail = null;
 
-  // ---------- live data helpers (no CSS/animation/class changes) ----------
-  function esc(t){ return String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // ---- safe HTML escaping for any GitHub-sourced text (topics, file names) ----
+  function esc(t){
+    return String(t == null ? '' : t)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
   function fmtCount(n){
     n = Number(n || 0);
     if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/, '') + 'M';
@@ -628,6 +830,7 @@
     if (!iso) return '—';
     const d = (Date.now() - new Date(iso).getTime()) / 1000;
     if (isNaN(d)) return '—';
+    if (d < 0) return 'just now';
     if (d < 3600) return Math.max(1, Math.floor(d/60)) + 'm ago';
     if (d < 86400) return Math.floor(d/3600) + 'h ago';
     if (d < 2592000) return Math.floor(d/86400) + 'd ago';
@@ -635,24 +838,19 @@
     return Math.floor(d/31536000) + 'y ago';
   }
   const LANG_COLORS = {
-    'C':'var(--brand-soft);color:var(--brand)',
-    'Shell':'var(--violet-soft);color:var(--violet)',
-    'Python':'#FFEDE6;color:var(--coral)',
-    'Kotlin':'#E1F7F5;color:var(--teal)',
-    'Rust':'var(--brand-soft);color:var(--brand)',
-    'YAML':'var(--violet-soft);color:var(--violet)',
-    'JavaScript':'var(--brand-soft);color:var(--brand)',
-    'TypeScript':'var(--violet-soft);color:var(--violet)',
-    'Java':'#FFEDE6;color:var(--coral)',
-    'Go':'#E1F7F5;color:var(--teal)',
-    'C++':'#FFEDE6;color:var(--coral)',
-    'PHP':'var(--violet-soft);color:var(--violet)',
+    'C':'var(--brand-soft);color:var(--brand)', 'Shell':'var(--violet-soft);color:var(--violet)',
+    'Python':'#FFEDE6;color:var(--coral)', 'Kotlin':'#E1F7F5;color:var(--teal)',
+    'Rust':'var(--brand-soft);color:var(--brand)', 'YAML':'var(--violet-soft);color:var(--violet)',
+    'JavaScript':'var(--brand-soft);color:var(--brand)', 'TypeScript':'var(--violet-soft);color:var(--violet)',
+    'Java':'#FFEDE6;color:var(--coral)', 'Go':'#E1F7F5;color:var(--teal)',
+    'C++':'#FFEDE6;color:var(--coral)', 'PHP':'var(--violet-soft);color:var(--violet)', 'Unknown':'var(--brand-soft);color:var(--brand)'
   };
   const STAR_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01z"/></svg>';
-  const FORK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="18" cy="3" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="20" r="1.4" fill="currentColor" stroke="none"/></svg>';
+  const FORK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3"/><path d="M12 12v6"/><circle cx="6" cy="3" r="1.4"/><circle cx="18" cy="3" r="1.4"/><circle cx="12" cy="20" r="1.4"/></svg>';
   const SAVE_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>';
   const CHEVRON_SVG = '<svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>';
 
+  // Reuses the EXACT row markup/classes/animation pattern from the design file.
   function rowInner(r, i){
     const langStyle = LANG_COLORS[r.language] || 'var(--brand-soft);color:var(--brand)';
     return ''
@@ -667,7 +865,7 @@
       +     '<span class="lang-chip" style="background:' + langStyle + ';">' + esc(r.language || '—') + '</span>'
       +   '</div>'
       + '</div>'
-      + '<button class="save-btn" onclick="event.stopPropagation();toggleSave(this)">' + SAVE_SVG + '</button>'
+      + '<button type="button" class="save-btn" onclick="event.stopPropagation();toggleSave(this)">' + SAVE_SVG + '</button>'
       + CHEVRON_SVG;
   }
 
@@ -694,6 +892,7 @@
     emptyStateEl.classList.toggle('show', repos.length === 0);
   }
 
+  // Live data source: fetch from the backend search API (no static array).
   function loadRepos(query, category){
     let url = API_BASE + '/api/search?';
     if (category && category !== 'trending') url += 'category=' + encodeURIComponent(category);
@@ -704,14 +903,14 @@
       repos = results.map(r => ({
         owner: r.owner + '/',
         name: r.name,
+        category: category || (query ? 'search' : 'trending'),
         desc: r.description || '',
         stars: fmtCount(r.stars),
         forks: fmtCount(r.forks),
         updated: relTime(r.updated_at),
         language: r.language || 'Unknown',
-        url: r.html_url || r.url || ('https://github.com/' + r.owner + '/' + r.name),
-        verdict: 'good',
-        summary: ''
+        url: r.html_url || ('https://github.com/' + r.owner + '/' + r.name),
+        topics: r.topics || []
       }));
       renderRows();
     }).catch(() => {
@@ -719,6 +918,80 @@
       renderRows();
     });
   }
+
+  // Populate the expanded detail panel from the backend repo view.
+  // readme_html is server-sanitized (safe to inject); all other GitHub text
+  // is escaped via esc().
+  function populateDetail(d){
+    const catKey = (currentRepo && currentRepo.category) || '';
+    const cat = categories.find(c => c.key === catKey);
+    document.getElementById('dCatLabel').textContent = cat ? cat.label : 'Repository';
+    const catBadge = document.getElementById('dCatBadge');
+    catBadge.style.background = cat ? cat.color : 'var(--brand)';
+    catBadge.style.color = '#fff';
+    catBadge.querySelector('.cdot').style.background = '#fff';
+
+    document.getElementById('dOwner').textContent = d.owner || '';
+    document.getElementById('dName').textContent = d.name || '';
+    document.getElementById('dDesc').textContent = d.desc || '';
+
+    document.getElementById('dLangChip').textContent = d.language || 'Unknown';
+    document.getElementById('dLicenseChip').textContent = d.license || 'None';
+
+    document.getElementById('dStars').textContent = d.stars || '0';
+    document.getElementById('dForks').textContent = d.forks || '0';
+    document.getElementById('dWatchers').textContent = d.watchers || '0';
+    document.getElementById('dIssues').textContent = d.open_issues || '0';
+    document.getElementById('dContributors').textContent = d.contributors || '0';
+    document.getElementById('dUpdated').textContent = d.updated || '—';
+
+    document.getElementById('dCreated').textContent = d.created || '—';
+    document.getElementById('dBranch').textContent = d.default_branch || 'main';
+    document.getElementById('dSize').textContent = d.size || '—';
+
+    const homeRow = document.getElementById('dHomepageRow');
+    const homeLink = document.getElementById('dHomepage');
+    if (d.homepage){
+      homeRow.style.display = 'flex';
+      homeLink.textContent = d.homepage;
+      homeLink.href = d.homepage.indexOf('http') === 0 ? d.homepage : 'https://' + d.homepage;
+    } else {
+      homeRow.style.display = 'none';
+    }
+
+    const topicsEl = document.getElementById('dTopics');
+    topicsEl.innerHTML = (d.topics || []).map(t => '<span class="d-topic-chip">' + esc(t) + '</span>').join('');
+
+    const fileListEl = document.getElementById('dFileList');
+    fileListEl.innerHTML = (d.files || []).map(f => {
+      const iconDir = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>';
+      const iconFile = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+      return '<div class="d-file-row ' + (f.dir ? 'is-dir' : '') + '">' + (f.dir ? iconDir : iconFile) + '<span class="fname">' + esc(f.name) + '</span></div>';
+    }).join('');
+
+    // README: server-sanitized HTML (safe to inject). Skeleton was already shown.
+    document.getElementById('dReadmeBox').innerHTML = d.readme_html || '<p>No README available.</p>';
+
+    document.getElementById('dOpenRepo').href = d.url || ('https://github.com/' + (d.owner||'').replace(/\/$/, '') + '/' + (d.name||''));
+
+    currentDetail = d;
+  }
+
+  function showUrlError(msg){
+    let el = document.getElementById('urlVerifyError');
+    if (!el){
+      el = document.createElement('div');
+      el.id = 'urlVerifyError';
+      el.style.cssText = 'font-size:12px;font-weight:600;color:var(--bad);margin-top:8px;text-align:left;';
+      document.getElementById('urlVerifyBox').appendChild(el);
+    }
+    el.textContent = msg;
+  }
+  function clearUrlError(){
+    const el = document.getElementById('urlVerifyError');
+    if (el) el.textContent = '';
+  }
+
 
 
   // ================= CATEGORY FILTER SYSTEM =================
@@ -779,32 +1052,10 @@
 
     if (chipEl && typeof spawnParticles === 'function') spawnParticles(chipEl);
 
-    // re-evaluate ALL rows every time, same fix applied to the list
-    let visibleCount = 0;
-    let delay = 0;
-    allRows().forEach(row => {
-      const matches = key === 'trending' || row.dataset.category === key;
-      if (matches){
-        row.classList.remove('row-hidden');
-        row.classList.remove('row-filtering-in');
-        void row.offsetWidth; // reflow to restart animation
-        row.style.animationDelay = (delay * 0.05) + 's';
-        row.classList.add('row-filtering-in');
-        visibleCount++;
-        delay++;
-      } else {
-        row.classList.add('row-hidden');
-      }
-    });
-
-    catCountEl.textContent = visibleCount;
-    catCountEl.classList.remove('is-animating');
-    void catCountEl.offsetWidth;
-    catCountEl.classList.add('is-animating');
-
-    emptyStateEl.classList.toggle('show', visibleCount === 0);
-
-    // live: fetch this category from the backend
+    // live data: fetch this category from the backend. The chip-active
+    // visual logic + particle feedback above is preserved exactly; the
+    // underlying data source is now the API (see loadRepos), not the
+    // static array, so rows are re-rendered fresh each time.
     loadRepos(null, key);
   }
 
@@ -816,6 +1067,9 @@
   const backBtn = document.getElementById('backBtn');
 
   function openDetail(i, ev){
+    // defensive: never let this bubble into a native form-submit/navigation,
+    // which is the most common cause of a full page reload on tap
+    if (ev){ ev.preventDefault && ev.preventDefault(); }
     if (ev && ev.currentTarget){
       const el = ev.currentTarget;
       el.classList.remove('tapped');
@@ -823,13 +1077,23 @@
       el.classList.add('tapped');
     }
     currentRepo = repos[i];
-    document.getElementById('dOwner').textContent = currentRepo.owner;
-    document.getElementById('dName').textContent = currentRepo.name;
-    document.getElementById('dDesc').textContent = currentRepo.desc;
-    document.getElementById('dStars').textContent = currentRepo.stars;
-    document.getElementById('dForks').textContent = currentRepo.forks;
-    document.getElementById('dUpdated').textContent = currentRepo.updated;
-    document.getElementById('dOpenRepo').href = currentRepo.url;
+    const owner = repos[i].owner.replace(/\/$/, '');
+    const name = repos[i].name;
+    const catKey = repos[i].category || activeCategory;
+    const cat = categories.find(c => c.key === catKey);
+    // category badge (immediate)
+    document.getElementById('dCatLabel').textContent = cat ? cat.label : 'Repository';
+    const catBadge = document.getElementById('dCatBadge');
+    catBadge.style.background = cat ? cat.color : 'var(--brand)';
+    catBadge.style.color = '#fff';
+    catBadge.querySelector('.cdot').style.background = '#fff';
+    // owner/name immediate
+    document.getElementById('dOwner').textContent = repos[i].owner;
+    document.getElementById('dName').textContent = repos[i].name;
+
+    // README: keep the skeleton-then-render pattern exactly (shimmer stays)
+    const readmeBox = document.getElementById('dReadmeBox');
+    readmeBox.innerHTML = '<div class="d-readme-skeleton"><div class="sk-line" style="width:60%"></div><div class="sk-line" style="width:92%"></div><div class="sk-line" style="width:84%"></div><div class="sk-line" style="width:70%"></div></div>';
 
     // reset AI panel to un-checked state
     document.getElementById('aiLoading').style.display = 'flex';
@@ -838,6 +1102,17 @@
     showPanel('detail');
     overlay.classList.add('open');
     lockScroll();
+
+    // BACKEND HOOK wired: real GET /api/repo/:owner/:name (includes sanitized
+    // README html, contents listing, stats, cached AI verdict)
+    currentDetail = null;
+    fetch(API_BASE + '/api/repo/' + encodeURIComponent(owner) + '/' + encodeURIComponent(name))
+      .then(r => r.json())
+      .then(d => {
+        if (d.error){ readmeBox.innerHTML = '<p>Failed to load repository details.</p>'; return; }
+        populateDetail(d);
+      })
+      .catch(() => { readmeBox.innerHTML = '<p>Failed to load repository details.</p>'; });
   }
 
   let scrollY = 0;
@@ -886,45 +1161,37 @@
     loading.style.display = 'flex';
     result.classList.remove('show');
 
-    const owner = (currentRepo.owner || '').replace(/\/$/, '');
-    fetch(`${API_BASE}/api/verify?owner=${encodeURIComponent(owner)}&name=${encodeURIComponent(currentRepo.name)}`)
+    const c = currentDetail || (currentRepo ? { owner: currentRepo.owner, name: currentRepo.name } : null);
+    if (!c){ loading.style.display = 'none'; return; }
+    const owner = c.owner.replace(/\/$/, '');
+    const name = c.name;
+
+    // BACKEND HOOK wired: real GET /api/verify (structured AI verdict fields)
+    fetch(API_BASE + '/api/verify?owner=' + encodeURIComponent(owner) + '&name=' + encodeURIComponent(name))
       .then(r => r.json())
       .then(d => {
-        if (d.error || !d.verdict){
-          loading.style.display = 'none';
-          badge.className = 'ai-verdict-badge bad';
-          badge.innerHTML = '<span class="sw"></span>Unavailable';
-          maintained.textContent = '—'; maturity.textContent = '—';
-          community.textContent = '—'; docs.textContent = '—'; setup.textContent = '—';
-          reasoning.textContent = d.message || 'AI verdict could not be fetched right now. Try again shortly.';
-          modelTag.textContent = 'via RepoRadar';
-          result.classList.add('show');
-          return;
-        }
-        const v = (d.verdict || '').toLowerCase();
-        const cls = v.indexOf('outdat') >= 0 ? 'bad' : (v.indexOf('caution') >= 0 || v.indexOf('warn') >= 0) ? 'warn' : 'good';
-        const label = cls === 'good' ? 'Working' : cls === 'warn' ? 'Needs caution' : 'Outdated';
         loading.style.display = 'none';
-        badge.className = 'ai-verdict-badge ' + cls;
+        const vt = (d.verdict || 'good').toLowerCase();
+        let vclass = 'good';
+        if (vt.indexOf('outdat') >= 0) vclass = 'bad';
+        else if (vt.indexOf('caution') >= 0 || vt.indexOf('warn') >= 0) vclass = 'warn';
+        const label = vclass === 'good' ? 'Working' : vclass === 'warn' ? 'Needs caution' : 'Outdated';
+        badge.className = 'ai-verdict-badge ' + vclass;
         badge.innerHTML = '<span class="sw"></span>' + label;
-
-        // structured fields from backend (already mapped to same keys)
         maintained.textContent = d.maintained || '—';
         maturity.textContent = d.maturity || '—';
         community.textContent = d.community || '—';
         docs.textContent = d.docs || '—';
         setup.textContent = d.setup || '—';
-        reasoning.textContent = d.reasoning || (d.summary || '—');
-        modelTag.textContent = 'via ' + (d.model || d.ai_provider || 'AI');
-
+        reasoning.textContent = d.reasoning || '—';
+        modelTag.textContent = 'via ' + (d.model || 'AI');
         result.classList.add('show');
       })
       .catch(() => {
         loading.style.display = 'none';
-        badge.className = 'ai-verdict-badge bad';
+        badge.className = 'ai-verdict-badge warn';
         badge.innerHTML = '<span class="sw"></span>Unavailable';
-        reasoning.textContent = 'Network error reaching RepoRadar. Check your connection and try again.';
-        modelTag.textContent = 'via RepoRadar';
+        reasoning.textContent = 'AI verdict temporarily unavailable. Try again in a moment.';
         result.classList.add('show');
       });
   }
@@ -953,66 +1220,72 @@
       label.textContent = 'Verifying…';
     }
 
+    // ---- BACKEND HOOK (Hermes wires this) ----
+    // IMPORTANT UX RULE: the button must switch to loading state (done above,
+    // via .loading class + spinner) THE INSTANT the user clicks — before any
+    // network call starts. Do not wait for the API response to show feedback.
+    //
+    // 1. Validate this is a github.com/{owner}/{repo} URL.
+    // 2. Open the existing detail modal IMMEDIATELY (showPanel('detail'),
+    //    overlay open, lockScroll()) with a loading skeleton in place of the
+    //    repo fields — reuse the same loading pattern already used for
+    //    "Get AI details" (id="aiLoading": "Checking README, commits &
+    //    issues… / Asking Gemini… / Working").
+    // 3. THEN call POST /api/verify-url { url } in the background.
+    // 4. When the response arrives, populate the modal fields and stop the
+    //    button's loading state:
+    //      btn.classList.remove('loading'); label.textContent = 'Verify';
+    // 5. On error (invalid URL / repo not found), stop loading state and
+    //    show a small inline error message under the input (using existing
+    //    --bad color), do not leave the button stuck in loading forever.
+    // BACKEND HOOK wired: open modal INSTANTLY with skeleton, then POST.
+    const guess = (function(){
+      const m = /github\.com\/([^\/\s]+)\/([^\/\s?#]+)/.exec(url);
+      return m ? { owner: m[1], name: m[2] } : null;
+    })();
+    if (!guess){
+      btn.classList.remove('loading'); label.textContent = 'Verify';
+      showUrlError('Please paste a valid github.com/owner/repo link.');
+      return;
+    }
+    // show modal immediately (skeleton)
+    document.getElementById('dCatLabel').textContent = 'Repository';
+    const catBadge = document.getElementById('dCatBadge');
+    catBadge.style.background = 'var(--brand)';
+    catBadge.style.color = '#fff';
+    catBadge.querySelector('.cdot').style.background = '#fff';
+    document.getElementById('dOwner').textContent = guess.owner + '/';
+    document.getElementById('dName').textContent = guess.name;
+    document.getElementById('dReadmeBox').innerHTML = '<div class="d-readme-skeleton"><div class="sk-line" style="width:60%"></div><div class="sk-line" style="width:92%"></div><div class="sk-line" style="width:84%"></div><div class="sk-line" style="width:70%"></div></div>';
     document.getElementById('aiLoading').style.display = 'flex';
     document.getElementById('aiResult').classList.remove('show');
-
-    // open the detail modal IMMEDIATELY with a loading skeleton (per UX rule)
-    openDetailLikeUrl(url);
-
-    fetch(`${API_BASE}/api/verify-url`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ url })
-    }).then(r => r.json()).then(d => {
-      btn.classList.remove('loading');
-      label.textContent = 'Verify';
-
-      if (d.error){
-        input.style.borderColor = 'var(--bad)';
-        let err = document.getElementById('urlVerifyErr');
-        if (!err){
-          err = document.createElement('div');
-          err.id = 'urlVerifyErr';
-          err.style.cssText = 'font-size:11.5px;color:var(--bad);margin-top:8px;font-weight:600;';
-          document.getElementById('urlVerifyBox').appendChild(err);
-        }
-        err.textContent = d.message || 'Something went wrong. Try again.';
-        closeModal();
-        return;
-      }
-      input.style.borderColor = '';
-      const err = document.getElementById('urlVerifyErr');
-      if (err) err.remove();
-
-      // populate the modal detail fields (3-box layout)
-      document.getElementById('dOwner').textContent = d.owner;
-      document.getElementById('dName').textContent = d.name;
-      document.getElementById('dDesc').textContent = d.desc || 'No description provided.';
-      document.getElementById('dStars').textContent = d.stars;
-      document.getElementById('dForks').textContent = d.forks;
-      document.getElementById('dUpdated').textContent = d.updated || '—';
-      document.getElementById('dOpenRepo').href = d.url;
-
-      // store for runVerify()
-      currentRepo = {
-        owner: d.owner, name: d.name, url: d.url,
-        verdict: d.verdict === 'Working' ? 'good' : d.verdict === 'Needs Caution' ? 'warn' : 'bad'
-      };
-
-      // auto-run AI verify on the freshly loaded repo
-      runVerify();
-    }).catch(() => {
-      btn.classList.remove('loading');
-      label.textContent = 'Verify';
-      closeModal();
-    });
-  }
-
-  function openDetailLikeUrl(url){
-    // lightweight clone of openDetail's modal-open + skeleton, no list index
     showPanel('detail');
     overlay.classList.add('open');
     lockScroll();
+
+    fetch(API_BASE + '/api/verify-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url })
+    })
+      .then(r => r.json())
+      .then(d => {
+        btn.classList.remove('loading');
+        label.textContent = 'Verify';
+        clearUrlError();
+        if (d.error){
+          showUrlError(d.message || 'Repository not found or could not be verified.');
+          document.getElementById('dReadmeBox').innerHTML = '<p>' + esc(d.message || 'Repository not found.') + '</p>';
+          return;
+        }
+        currentRepo = { owner: d.owner, name: d.name, category: '' };
+        populateDetail(d);
+      })
+      .catch(() => {
+        btn.classList.remove('loading');
+        label.textContent = 'Verify';
+        showUrlError('Network error — please try again.');
+      });
   }
 
   function pulseSearch(btn){
@@ -1020,9 +1293,9 @@
     void btn.offsetWidth;
     btn.classList.add('searching');
     spawnParticles(btn);
+    const inp = document.querySelector('.search input');
+    loadRepos(inp ? inp.value : '', null);
     setTimeout(() => btn.classList.remove('searching'), 500);
-    const _inp = document.querySelector('.search input');
-    loadRepos(_inp ? _inp.value : '', null);
   }
 
   function spawnParticles(btn){

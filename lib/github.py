@@ -5,6 +5,7 @@ import urllib.parse
 import json
 import os
 import re
+from lib.markdown import markdown_to_html
 
 
 def _headers(token, accept="application/vnd.github+json"):
@@ -112,8 +113,10 @@ def get_repo_detail(full_name, token):
     try:
         readme = get("/readme", accept="application/vnd.github.raw+json")
         out["readme"] = readme[:2000]
+        out["readme_html"] = markdown_to_html(readme[:4000])
     except Exception:
         out["readme"] = ""
+        out["readme_html"] = ""
 
     # Last 5 commits
     try:
@@ -132,3 +135,32 @@ def get_repo_detail(full_name, token):
         out["latest_release"] = None
 
     return out
+
+
+def get_repo_contents(full_name, token, path=""):
+    """Return top-level file/folder listing from the GitHub contents API.
+
+    Falls back to [] on any error. Each entry: {name, type ('dir'|'file'),
+    size, html_url}. Sorted dirs-first then alpha.
+    """
+    try:
+        url = f"https://api.github.com/repos/{full_name}/contents/{path}"
+        req = urllib.request.Request(url, headers=_headers(token))
+        data = json.loads(urllib.request.urlopen(req, timeout=20).read().decode())
+    except Exception:
+        return []
+    if isinstance(data, dict):
+        data = [data]
+    items = []
+    for it in data:
+        t = it.get("type")
+        items.append({
+            "name": it.get("name", ""),
+            "type": "dir" if t == "dir" else "file",
+            "size": it.get("size", 0),
+            "html_url": it.get("html_url", ""),
+            "path": it.get("path", ""),
+        })
+    # dirs first, then alphabetical
+    items.sort(key=lambda x: (x["type"] != "dir", x["name"].lower()))
+    return items[:30]
