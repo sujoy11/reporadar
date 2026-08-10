@@ -14,7 +14,7 @@ PROMPT = """You are analyzing a GitHub repository based ONLY on the data provide
 Do not invent facts. Reply with ONLY a single JSON object (no markdown, no code
 fences, no commentary) with exactly these keys:
 
-{
+{{
   "maintained": "short phrase: recent commit/push activity (e.g. 'Active — commits within the last week')",
   "maturity": "short phrase: maturity/stability/adoption (e.g. 'Production-ready, widely used')",
   "community": "short phrase: issue/PR responsiveness (e.g. 'Active — issues answered within days')",
@@ -22,7 +22,7 @@ fences, no commentary) with exactly these keys:
   "setup": "Simple / Moderate / Complex",
   "verdict": "Working / Needs Caution / Outdated",
   "reasoning": "one concise sentence explaining WHY the verdict is what it is"
-}
+}}
 
 Repository: {full_name}
 Description: {description}
