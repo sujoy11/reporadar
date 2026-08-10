@@ -857,7 +857,7 @@
 
     document.getElementById('dCreated').textContent = currentRepo.created;
     document.getElementById('dBranch').textContent = currentRepo.defaultBranch;
-    document.getElementById('dSize').textContent = formatSize(currentRepo.size);
+    document.getElementById('dSize').textContent = formatSize(currentRepo.size || 0);
 
     const homeRow = document.getElementById('dHomepageRow');
     if (currentRepo.homepage){
@@ -869,9 +869,9 @@
     }
 
     const topicsWrap = document.getElementById('dTopics');
-    topicsWrap.innerHTML = currentRepo.topics.map(t => '<span class="topic-pill">' + t + '</span>').join('');
+    topicsWrap.innerHTML = (currentRepo.topics || []).map(t => '<span class="topic-pill">' + t + '</span>').join('');
 
-    document.getElementById('dReadme').textContent = currentRepo.readme;
+    document.getElementById('dReadme').textContent = currentRepo.readme || '';
 
     document.querySelectorAll('.stat-box').forEach(el => {
       el.style.animation = 'none';
