@@ -138,7 +138,7 @@ async def verify_url(request: Request):
         "topics": detail.get("topics", []),
         "readme": (detail.get("readme") or "")[:400],
         "updated": _rel_time(detail.get("pushed_at") or detail.get("updated_at")),
-        "url": detail.get("html_url") or f"https://github.com/{full}",
+        "url": f"https://github.com/{owner}/{name}",
         "verdict": verdict,
         "summary": summary,
         "ai_provider": provider,
