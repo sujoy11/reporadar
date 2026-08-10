@@ -6,7 +6,8 @@ import os
 import urllib.request
 import json
 
-OPENROUTER_MODEL = "google/gemma-4-26b-a4b-it:free"
+OPENROUTER_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
+OPENROUTER_MODEL_FALLBACK = "google/gemma-4-26b-a4b-it:free"
 MISTRAL_MODEL = "mistral-small-latest"
 GEMINI_MODEL = "gemini-1.5-flash"
 
@@ -49,7 +50,7 @@ def _parse_json(text):
     return json.loads(s)
 
 
-def _call_openrouter(full_name, data):
+def _call_openrouter(full_name, data, model=OPENROUTER_MODEL):
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         raise RuntimeError("no_openrouter_key")
@@ -63,7 +64,7 @@ def _call_openrouter(full_name, data):
         archived=data.get("archived"),
     )
     body = json.dumps({
-        "model": OPENROUTER_MODEL,
+        "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.3,
         "response_format": {"type": "json_object"},
@@ -76,7 +77,7 @@ def _call_openrouter(full_name, data):
     )
     r = urllib.request.urlopen(req, timeout=40)
     content = json.loads(r.read().decode())["choices"][0]["message"]["content"]
-    return _parse_json(content), OPENROUTER_MODEL
+    return _parse_json(content), model
 
 
 def _call_mistral(full_name, data):
@@ -131,15 +132,18 @@ def _call_gemini(full_name, data):
 
 
 def verify_repo(full_name, data):
-    """OpenRouter (free gemma-4-26b) primary, Mistral + Gemini fallback.
-    Returns (fields_dict, real_model_slug). fields_dict has the 7 JSON keys
-    (maintained, maturity, community, docs, setup, verdict, reasoning).
-    """
+    """OpenRouter primary (nemotron-omni-30b) -> OpenRouter fallback (gemma-4-26b)
+    -> Mistral -> Gemini. Returns (fields_dict, real_model_slug)."""
     last_err = None
-    for fn in (_call_openrouter, _call_mistral, _call_gemini):
+    attempts = [
+        (_call_openrouter, (OPENROUTER_MODEL,)),
+        (_call_openrouter, (OPENROUTER_MODEL_FALLBACK,)),
+        (_call_mistral, ()),
+        (_call_gemini, ()),
+    ]
+    for fn, args in attempts:
         try:
-            fields, model = fn(full_name, data)
-            # normalise keys defensively
+            fields, model = fn(full_name, data, *args)
             out = {
                 "maintained": str(fields.get("maintained", "")).strip(),
                 "maturity": str(fields.get("maturity", "")).strip(),
