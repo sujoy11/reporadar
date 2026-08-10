@@ -6,27 +6,27 @@ from lib import supabase_client as db
 
 router = APIRouter()
 
-# Map frontend category chips -> GitHub search queries (free tier, no API key needed)
+# Map frontend category chips -> GitHub search queries (topic-based, free tier)
 CATEGORY_QUERIES = {
     "trending": "stars:>5000",
-    "termux": "termux",
-    "android-rom": "android rom custom in:name,description",
-    "ai-ml": "machine-learning OR deep-learning OR llm in:name,description stars:>500",
-    "devops": "devops OR kubernetes OR docker in:name,description stars:>500",
-    "web-dev": "react OR vue OR nextjs in:name,description stars:>500",
-    "mobile-dev": "flutter OR react-native OR android in:name,description stars:>500",
-    "security": "security OR pentest OR ctf in:name,description stars:>300",
-    "game-dev": "game engine OR gamedev in:name,description stars:>300",
-    "data-science": "pandas OR numpy OR data-science in:name,description stars:>500",
-    "cli-tools": "cli tool in:name,description stars:>300",
-    "automation": "automation OR bot in:name,description stars:>300",
-    "backend": "api server in:name,description stars:>500",
-    "frontend": "frontend OR ui component in:name,description stars:>500",
-    "blockchain": "blockchain OR web3 OR solidity in:name,description stars:>300",
-    "iot": "iot OR arduino OR esp32 in:name,description stars:>300",
-    "cloud": "aws OR gcp OR cloud in:name,description stars:>500",
-    "database": "database OR postgres OR redis in:name,description stars:>300",
-    "chrome-ext": "chrome extension in:name,description stars:>100",
+    "termux": "topic:termux",
+    "android-rom": "topic:custom-rom OR topic:android-rom OR topic:android",
+    "ai-ml": "topic:machine-learning OR topic:deep-learning OR topic:artificial-intelligence OR topic:neural-network",
+    "devops": "topic:devops OR topic:ci-cd OR topic:kubernetes OR topic:docker",
+    "web-dev": "topic:web OR topic:web-development OR topic:frontend",
+    "mobile-dev": "topic:android OR topic:ios OR topic:mobile OR topic:flutter",
+    "security": "topic:security OR topic:cybersecurity OR topic:pentesting",
+    "game-dev": "topic:game-development OR topic:game-engine OR topic:gamedev",
+    "data-science": "topic:data-science OR topic:data-analysis OR topic:machine-learning",
+    "cli-tools": "topic:cli OR topic:command-line OR topic:terminal",
+    "automation": "topic:automation OR topic:bot OR topic:script",
+    "backend": "topic:backend OR topic:api OR topic:server",
+    "frontend": "topic:frontend OR topic:ui OR topic:react OR topic:vue",
+    "blockchain": "topic:blockchain OR topic:web3 OR topic:ethereum OR topic:solidity",
+    "iot": "topic:iot OR topic:arduino OR topic:esp32 OR topic:raspberry-pi",
+    "cloud": "topic:cloud OR topic:aws OR topic:azure OR topic:gcp",
+    "database": "topic:database OR topic:sql OR topic:postgresql OR topic:redis",
+    "chrome-ext": "topic:chrome-extension OR topic:browser-extension OR topic:firefox-extension",
     "open-source": "stars:>1000",
 }
 
