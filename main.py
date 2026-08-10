@@ -123,6 +123,7 @@ async def repo_page(owner: str, name: str):
         "__AI_PROVIDER__": provider,
         "__REPO_URL__": detail.get("html_url") or f"https://github.com/{full}",
         "__AUTHOR__": owner.rstrip("/"),
+    }
     for k, v in repl.items():
         tpl_html = tpl_html.replace(k, str(v))
 
