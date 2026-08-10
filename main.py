@@ -2,6 +2,7 @@
 Serves static frontend + API routes.
 """
 import os
+import json
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -66,29 +67,30 @@ async def repo_page(owner: str, name: str):
     # AI verdict — cache-first
     verdict_raw = ""
     summary = ""
-    provider = "Gemini"
+    provider = "AI"
+    vclass, vlabel = "good", "Working"
     cached = db.get_verified(owner, name)
     if cached and cached.get("reasoning"):
         verdict_raw = cached.get("verdict") or ""
         summary = cached.get("summary") or ""
-        provider = cached.get("ai_provider") or "Gemini"
+        provider = cached.get("model") or cached.get("ai_provider") or "AI"
     else:
         try:
-            text, provider = ai_lib.verify_repo(full, detail)
-            # parse verdict line (4. VERDICT: ...)
-            import re as _re
-            for line in text.splitlines():
-                u = line.upper()
-                if "VERDICT:" in u or u.startswith("4"):
-                    verdict_raw = _re.sub(r'^\s*\d+\.\s*', '', line.split(":", 1)[-1]).strip()
-                    break
-            summary = text
-            db.set_verified(owner, name, verdict_raw, text, provider, stars)
+            fields, used_model = ai_lib.verify_repo(full, detail)
+            verdict_raw = fields.get("verdict") or ""
+            summary = json.dumps(fields, ensure_ascii=False)
+            provider = used_model
+            stars = detail.get("stars") or 0
+            db.set_verified(owner, name, verdict_raw, summary, provider, stars,
+                           maintained=fields.get("maintained"), maturity=fields.get("maturity"),
+                           community=fields.get("community"), docs=fields.get("docs"),
+                           setup=fields.get("setup"), reasoning=fields.get("reasoning"),
+                           model=provider)
         except Exception:
             verdict_raw = ""
             summary = "AI verdict temporarily unavailable. Check the live site for the full analysis."
 
-    raw = verdict_raw.lower()
+    raw = (verdict_raw or "").lower()
     if "outdat" in raw:
         vclass, vlabel = "bad", "Outdated"
     elif "caution" in raw or "warn" in raw:
@@ -99,6 +101,7 @@ async def repo_page(owner: str, name: str):
     title = f"{full} — RepoRadar AI verdict"
     description = f"{desc} Stars: {fmt(stars)}. Forks: {fmt(forks)}. AI verdict: {vlabel}. Check if {full} actually works before you build on it."
     canonical = f"https://reporadar-backend.onrender.com/repo/{owner}/{name}"
+    rating_value = "5" if vclass == "good" else ("3" if vclass == "warn" else "1")
 
     tpl = _os.path.join(BASE, "templates", "seo_repo.html")
     with open(tpl, encoding="utf-8") as f:
@@ -115,6 +118,7 @@ async def repo_page(owner: str, name: str):
         "__UPDATED__": rel(pushed),
         "__VERDICT_CLASS__": vclass,
         "__VERDICT_LABEL__": vlabel,
+        "__RATING_VALUE__": rating_value,
         "__SUMMARY__": summary.replace("&", "&amp;").replace("<", "&lt;"),
         "__AI_PROVIDER__": provider,
         "__REPO_URL__": detail.get("html_url") or f"https://github.com/{full}",
@@ -137,6 +141,21 @@ async def sitemap():
         ("tensorflow", "tensorflow"), ("rust-lang", "rust"), ("django", "django"),
         ("pallets", "flask"), ("expressjs", "express"), ("twbs", "bootstrap"),
         ("redis", "redis"), ("git", "git"), ("npm", "cli"),
+        ("nodejs", "node"), ("vercel", "next.js"), ("angular", "angular"),
+        ("sveltejs", "svelte"), ("denoland", "deno"), ("microsoft", "vscode"),
+        ("python", "cpython"), ("apple", "swift"), ("golang", "go"),
+        ("llvm", "llvm-project"), ("keras-team", "keras"), ("pytorch", "pytorch"),
+        ("openjdk", "jdk"), ("ruby", "ruby"), ("rails", "rails"),
+        ("php", "php-src"), ("laravel", "laravel"), ("symfony", "symfony"),
+        ("nginx", "nginx"), ("moby", "moby"), ("kubernetes", "kubernetes"),
+        ("hashicorp", "terraform"), ("gradle", "gradle"), ("jetbrains", "kotlin"),
+        ("neovim", "neovim"), ("vim", "vim"), ("postgres", "postgres"),
+        ("mongodb", "mongo"), ("redis", "redis"), ("elastic", "elasticsearch"),
+        ("apache", "kafka"), ("rabbitmq", "rabbitmq-server"), ("graphql", "graphql-js"),
+        ("axios", "axios"), ("lodash", "lodash"), ("jquery", "jquery"),
+        ("chartjs", "Chart.js"), ("moment", "moment"), ("tailwindlabs", "tailwindcss"),
+        ("supabase", "supabase"), ("vercel", "swr"), ("pmndrs", "zustand"),
+        ("reduxjs", "redux"), ("vuejs", "vuex"), ("piniajs", "pinia"),
     ]
     urls = [f"  <url><loc>{base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>"]
     for o, n in repos:
