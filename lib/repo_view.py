@@ -83,7 +83,7 @@ def build_view(full, token, name_hint=None, owner_hint=None, detail=None, conten
     return {
         "owner": owner + "/",
         "name": name,
-        "url": detail.get("html_url") or f"https://github.com/{full}",
+        "url": f"https://github.com/{owner}/{name}",
         "desc": detail.get("description") or "No description provided.",
         "category": detail.get("category") or "",
         # formatted stat strings (frontend shows them verbatim)

@@ -109,11 +109,14 @@ def get_repo_detail(full_name, token):
     except Exception:
         out["contributors"] = None
 
-    # README (first 2000 chars)
+    # README (fetched as raw text, not JSON — the raw accept returns markdown,
+    # not a JSON envelope). Convert to sanitized HTML.
     try:
-        readme = get("/readme", accept="application/vnd.github.raw+json")
-        out["readme"] = readme[:2000]
-        out["readme_html"] = markdown_to_html(readme[:4000])
+        req = urllib.request.Request(base + "/readme",
+                                     headers=_headers(token, "application/vnd.github.raw+json"))
+        raw = urllib.request.urlopen(req, timeout=20).read().decode("utf-8", "replace")
+        out["readme"] = raw[:2000]
+        out["readme_html"] = markdown_to_html(raw[:4000])
     except Exception:
         out["readme"] = ""
         out["readme_html"] = ""
