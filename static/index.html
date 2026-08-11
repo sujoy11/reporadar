@@ -463,9 +463,9 @@
     margin-top:22px; padding:14px 0 20px;
     background:linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--card) 22%);
   }
-  .btn-row::before{
-    content:''; position:absolute; left:-20px; right:-20px; top:0; height:1px; background:var(--line);
-  }
+  /* hairline removed intentionally — it was showing up as a faint line
+     cutting through scrolling content above the sticky footer. The
+     gradient fade on .btn-row's background is enough of a visual separator. */
 
   .get-ai-btn{
     flex:1; width:100%; margin-top:0; border:none; cursor:pointer;
