@@ -727,6 +727,10 @@
   let repos = [];
   let currentDetail = null;
   let detailReqId = 0; // guards against out-of-order async detail responses
+  // active detail token = the full_name of the repo whose detail is currently
+  // being shown. Any response whose full_name does NOT match this is discarded,
+  // so stale/adjacent/out-of-order fetches can never overwrite the modal.
+  let activeDetailFull = '';
 
   // ---- safe HTML escaping for any GitHub-sourced text (topics, file names) ----
   function esc(t){
@@ -840,8 +844,8 @@
   // Populate the expanded detail panel from the backend repo view.
   // readme_html is server-sanitized (safe to inject); all other GitHub text
   // is escaped via esc().
-  function populateDetail(d){
-    const catKey = (currentRepo && currentRepo.category) || '';
+  function populateDetail(d, catKey){
+    if (catKey === undefined) catKey = (currentRepo && currentRepo.category) || d.category || '';
     const cat = categories.find(c => c.key === catKey);
     document.getElementById('dCatLabel').textContent = cat ? cat.label : 'Repository';
     const catBadge = document.getElementById('dCatBadge');
@@ -1025,12 +1029,18 @@
     // README html, contents listing, stats, cached AI verdict)
     currentDetail = null;
     const reqId = ++detailReqId;
+    // active detail token = the full_name we are requesting. Any response that
+    // does not belong to this token is silently discarded (race-condition fix).
+    activeDetailFull = owner + '/' + name;
     fetch(API_BASE + '/api/repo/' + encodeURIComponent(owner) + '/' + encodeURIComponent(name))
       .then(r => r.json())
       .then(d => {
+        // Guard: only render if this response matches the currently-active repo.
+        const got = (d && (d.full_name || (d.owner + '/' + d.name))) || '';
         if (reqId !== detailReqId) return; // a newer request superseded this one
+        if (got.replace(/\/$/, '') !== activeDetailFull) return; // stale/adjacent response
         if (d.error){ readmeBox.innerHTML = '<p>Failed to load repository details.</p>'; return; }
-        populateDetail(d);
+        populateDetail(d, catKey);
       })
       .catch(() => { if (reqId === detailReqId) readmeBox.innerHTML = '<p>Failed to load repository details.</p>'; });
   }
@@ -1170,6 +1180,7 @@
     }
     // show modal immediately (skeleton)
     detailReqId++; // supersede any in-flight openDetail fetch so it can't overwrite this
+    activeDetailFull = guess.owner + '/' + guess.name;
     document.getElementById('dCatLabel').textContent = 'Repository';
     const catBadge = document.getElementById('dCatBadge');
     catBadge.style.background = 'var(--brand)';
@@ -1184,6 +1195,8 @@
     overlay.classList.add('open');
     lockScroll();
 
+    const reqId = detailReqId;
+    const wantFull = guess.owner + '/' + guess.name;
     fetch(API_BASE + '/api/verify-url', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1194,13 +1207,16 @@
         btn.classList.remove('loading');
         label.textContent = 'Verify';
         clearUrlError();
+        if (reqId !== detailReqId) return; // superseded by a newer open
+        const got = (d && (d.full_name || (d.owner + '/' + d.name))) || '';
+        if (got.replace(/\/$/, '') !== wantFull) return; // stale/adjacent response
         if (d.error){
           showUrlError(d.message || 'Repository not found or could not be verified.');
           document.getElementById('dReadmeBox').innerHTML = '<p>' + esc(d.message || 'Repository not found.') + '</p>';
           return;
         }
         currentRepo = { owner: d.owner, name: d.name, category: '' };
-        populateDetail(d);
+        populateDetail(d, '');
       })
       .catch(() => {
         btn.classList.remove('loading');
