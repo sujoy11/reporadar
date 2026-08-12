@@ -1036,9 +1036,11 @@
       .then(r => r.json())
       .then(d => {
         // Guard: only render if this response matches the currently-active repo.
-        const got = (d && (d.full_name || (d.owner + '/' + d.name))) || '';
+        // Normalize both sides: backend returns owner WITH a trailing slash and
+        // no full_name, so build the token as owner(trim slash)/name(trim slash).
+        const got = (d && ((d.owner || '').replace(/\/$/, '') + '/' + (d.name || '').replace(/\/$/, ''))) || '';
         if (reqId !== detailReqId) return; // a newer request superseded this one
-        if (got.replace(/\/$/, '') !== activeDetailFull) return; // stale/adjacent response
+        if (got !== activeDetailFull) return; // stale/adjacent response
         if (d.error){ readmeBox.innerHTML = '<p>Failed to load repository details.</p>'; return; }
         populateDetail(d, catKey);
       })
@@ -1208,8 +1210,8 @@
         label.textContent = 'Verify';
         clearUrlError();
         if (reqId !== detailReqId) return; // superseded by a newer open
-        const got = (d && (d.full_name || (d.owner + '/' + d.name))) || '';
-        if (got.replace(/\/$/, '') !== wantFull) return; // stale/adjacent response
+        const got = (d && ((d.owner || '').replace(/\/$/, '') + '/' + (d.name || '').replace(/\/$/, ''))) || '';
+        if (got !== wantFull) return; // stale/adjacent response
         if (d.error){
           showUrlError(d.message || 'Repository not found or could not be verified.');
           document.getElementById('dReadmeBox').innerHTML = '<p>' + esc(d.message || 'Repository not found.') + '</p>';
