@@ -27,14 +27,27 @@ def search_repositories(query, token, per_page=30):
       -> search "hermes" -> NousResearch/hermes-agent at top).
     """
     STOP = {"install", "setup", "how", "to", "guide", "tutorial", "download",
-    "get", "use", "using", "for", "the", "a", "an", "best", "top",
+            "get", "use", "using", "for", "the", "a", "an", "best", "top",
             "app", "tool", "github", "reddit", "vs", "alternative", "free",
             "in", "on", "of", "me", "my", "you", "your", "with", "and", "or",
             "ios", "android", "windows", "macos", "linux", "web", "api", "ui"}
+    # Server-side sanitization: a pasted search-engine / share URL can carry
+    # tracking params (e.g. Google's &ved=...) that would otherwise flow
+    # straight into the GitHub query and corrupt the result. Strip anything
+    # from the first '&' or '?' — valid GitHub qualifiers never use those.
+    query = query.split("&")[0].split("?")[0].strip()
     words = [w for w in query.lower().split() if w not in STOP]
     if not words:
         words = query.lower().split()[:3]
-    q = " ".join(words) + " in:name,description"
+    # Build the GitHub query. Appending 'in:name,description' only makes sense
+    # for plain free-text topic words; if the query already contains a GitHub
+    # qualifier (stars:, topic:, language:, user:, org:, ...), leave it intact
+    # — otherwise 'stars:>5000 in:name,description' matches almost nothing and
+    # the trending category returns only a handful of repos.
+    if any(":" in w for w in words):
+        q = " ".join(words)
+    else:
+        q = " ".join(words) + " in:name,description"
     url = (f"https://api.github.com/search/repositories?q={urllib.parse.quote_plus(q)}"
            f"&sort=stars&order=desc&per_page={per_page}")
     req = urllib.request.Request(url, headers=_headers(token))

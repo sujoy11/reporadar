@@ -462,6 +462,42 @@
   }
   @keyframes sk-shimmer{ 0%{ background-position:100% 0; } 100%{ background-position:0 0; } }
 
+  /* ---- generic skeleton state for repo-detail fields (stats, title,
+     chips, meta) — shown while a repo detail (or verify-url detail) is
+     being fetched, so nothing but the README box shows placeholder text
+     during loading. Toggled via the .skel class in JS. ---- */
+  .skel{
+    color:transparent !important; pointer-events:none;
+    background:linear-gradient(90deg, var(--line) 25%, #F3F1E6 37%, var(--line) 63%) !important;
+    background-size:400% 100% !important;
+    animation:sk-shimmer 1.4s ease-in-out infinite !important;
+    border-radius:6px; display:inline-block; min-width:2.6em; min-height:0.95em;
+  }
+  .stat-box b.skel{ min-width:1.8em; }
+  #dDesc.skel{
+    display:block; width:88%; min-height:2.7em; color:transparent !important;
+  }
+  .d-chip.skel{ min-width:44px; }
+
+  /* row-list skeleton (shown in place of results while a search/category
+     fetch is in flight) — mirrors the real .row layout so there's no
+     layout jump when real rows replace it */
+  .row-skel{
+    display:flex; align-items:center; gap:14px;
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:14px 16px; margin-bottom:10px;
+  }
+  .row-skel .rs-rank{ width:22px; height:14px; border-radius:5px; flex:none; }
+  .row-skel .rs-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; }
+  .row-skel .rs-line{ height:11px; border-radius:6px; }
+  .row-skel .rs-line.w1{ width:46%; }
+  .row-skel .rs-line.w2{ width:78%; }
+  .row-skel .rs-line.w3{ width:34%; }
+  .row-skel .rs-rank, .row-skel .rs-line{
+    background:linear-gradient(90deg, var(--line) 25%, #F3F1E6 37%, var(--line) 63%);
+    background-size:400% 100%; animation:sk-shimmer 1.4s ease-in-out infinite;
+  }
+
   /* sticky action-button footer — stays visible no matter how long the
      description/AI content above it scrolls. bottom:0 anchors it to the
      nearest scrolling ancestor, which is .modal-body (overflow-y:auto). */
@@ -792,9 +828,26 @@
 
   const HUES = ['blue','violet','coral','teal'];
 
+  function showRowSkeletons(count){
+    const listWrap = document.querySelector('.list-wrap');
+    listWrap.querySelectorAll('.row, .row-skel').forEach(el => el.remove());
+    emptyStateEl.classList.remove('show');
+    for (let i = 0; i < count; i++){
+      const sk = document.createElement('div');
+      sk.className = 'row-skel';
+      sk.innerHTML = '<div class="rs-rank"></div>'
+        + '<div class="rs-main">'
+        +   '<div class="rs-line w1"></div>'
+        +   '<div class="rs-line w2"></div>'
+        +   '<div class="rs-line w3"></div>'
+        + '</div>';
+      listWrap.insertBefore(sk, emptyStateEl);
+    }
+  }
+
   function renderRows(){
     const listWrap = document.querySelector('.list-wrap');
-    listWrap.querySelectorAll('.row').forEach(el => el.remove());
+    listWrap.querySelectorAll('.row, .row-skel').forEach(el => el.remove());
     const cat = (activeCategory === 'trending') ? 'trending' : activeCategory;
     repos.forEach((r, i) => {
       const row = document.createElement('div');
@@ -814,12 +867,23 @@
   }
 
   // Live data source: fetch from the backend search API (no static array).
+  let searchReqId = 0;
   function loadRepos(query, category){
     let url = API_BASE + '/api/search?';
     if (category && category !== 'trending') url += 'category=' + encodeURIComponent(category);
     else if (query && query.trim()) url += 'q=' + encodeURIComponent(query.trim());
     else url += 'category=trending';
+
+    // show a clear loading state immediately — the button's own click
+    // animation only lasts ~500ms, but the fetch can take 2-3s, so without
+    // this the results just sit there with no feedback that anything is
+    // happening. Also guards against an older, slower request finishing
+    // AFTER a newer one and overwriting it with stale results.
+    showRowSkeletons(6);
+    const reqId = ++searchReqId;
+
     fetch(url).then(r => r.json()).then(d => {
+      if (reqId !== searchReqId) return; // superseded by a newer search/category call
       const results = d.results || [];
       repos = results.map(r => ({
         owner: r.owner + '/',
@@ -836,6 +900,7 @@
       }));
       renderRows();
     }).catch(() => {
+      if (reqId !== searchReqId) return;
       repos = [];
       renderRows();
     });
@@ -844,7 +909,65 @@
   // Populate the expanded detail panel from the backend repo view.
   // readme_html is server-sanitized (safe to inject); all other GitHub text
   // is escaped via esc().
+  const SKEL_IDS = ['dOwner','dName','dStars','dForks','dWatchers','dIssues',
+    'dContributors','dUpdated','dCreated','dBranch','dSize','dLangChip','dLicenseChip'];
+  function clearSkel(){
+    SKEL_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('skel'); });
+    const _desc = document.getElementById('dDesc');
+    if (_desc) _desc.classList.remove('skel');
+  }
+  // Shared "blank to skeleton" step, used by BOTH the row-click detail flow
+  // (openDetail) and the paste-a-GitHub-link flow (verifyDirectUrl) so
+  // neither one ever shows stale/previous-repo data while its fetch is in
+  // flight — only shimmer placeholders until real data (or an error) lands.
+  function blankDetailFields(){
+    SKEL_IDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = '—';
+      el.classList.add('skel');
+    });
+    const _desc = document.getElementById('dDesc');
+    if (_desc){ _desc.textContent = '—'; _desc.classList.add('skel'); }
+    const _archived = document.getElementById('dArchivedChip');
+    if (_archived) _archived.style.display = 'none';
+    const _homepage = document.getElementById('dHomepageRow');
+    if (_homepage) _homepage.style.display = 'none';
+    const _topics = document.getElementById('dTopics');
+    if (_topics) _topics.innerHTML = '';
+    const _files = document.getElementById('dFileList');
+    if (_files) _files.innerHTML = '';
+    document.getElementById('dReadmeBox').innerHTML = '<div class="d-readme-skeleton"><div class="sk-line" style="width:60%"></div><div class="sk-line" style="width:92%"></div><div class="sk-line" style="width:84%"></div><div class="sk-line" style="width:70%"></div></div>';
+  }
+  // A valid GitHub owner/repo segment is letters, digits, dot, dash, underscore
+  // only. If either looks contaminated (e.g. a stray "&ved=..." tracking
+  // param that leaked in from a pasted search-engine link), treat the
+  // response as invalid rather than rendering garbage into the modal.
+  const GH_SEGMENT_RE = /^[A-Za-z0-9._-]+$/;
+  function looksMalformed(d){
+    const owner = (d.owner || '').replace(/\/$/, '');
+    const name = d.name || '';
+    if (!owner || !name) return true;
+    if (!GH_SEGMENT_RE.test(owner) || !GH_SEGMENT_RE.test(name)) return true;
+    if (owner.length > 100 || name.length > 100) return true;
+    return false;
+  }
+  function showDetailError(msg){
+    clearSkel();
+    const setDash = id => { const el = document.getElementById(id); if (el) el.textContent = '—'; };
+    ['dStars','dForks','dWatchers','dIssues','dContributors','dUpdated','dCreated','dBranch','dSize']
+      .forEach(setDash);
+    document.getElementById('dLangChip').textContent = '';
+    document.getElementById('dLicenseChip').textContent = '';
+    document.getElementById('dDesc').textContent = msg || "Couldn't load this repository's details.";
+    document.getElementById('dTopics').innerHTML = '';
+    document.getElementById('dFileList').innerHTML = '';
+    document.getElementById('dReadmeBox').innerHTML = '<p>' + esc(msg || "Couldn't load this repository's details — the link may be broken or the repo may not exist.") + '</p>';
+    document.getElementById('dHomepageRow').style.display = 'none';
+  }
   function populateDetail(d, catKey){
+    if (looksMalformed(d)){ showDetailError(); return; }
+    clearSkel();
     if (catKey === undefined) catKey = (currentRepo && currentRepo.category) || d.category || '';
     const cat = categories.find(c => c.key === catKey);
     document.getElementById('dCatLabel').textContent = cat ? cat.label : 'Repository';
@@ -1011,32 +1134,11 @@
     catBadge.querySelector('.cdot').style.background = '#fff';
     // BUG FIX: blank/clear every detail field to a placeholder BEFORE the
     // fetch starts, so no hardcoded example or previous-repo value ever
-    // flashes. README already gets a skeleton below.
-    const _blank = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    _blank('dOwner', '—');
-    _blank('dName', '—');
-    _blank('dDesc', '—');
-    _blank('dStars', '—');
-    _blank('dForks', '—');
-    _blank('dWatchers', '—');
-    _blank('dIssues', '—');
-    _blank('dContributors', '—');
-    _blank('dUpdated', '—');
-    _blank('dCreated', '—');
-    _blank('dBranch', '—');
-    _blank('dSize', '—');
-    _blank('dLangChip', '');
-    _blank('dLicenseChip', '');
-    const _archived = document.getElementById('dArchivedChip');
-    if (_archived) _archived.style.display = 'none';
-    const _homepage = document.getElementById('dHomepageRow');
-    if (_homepage) _homepage.style.display = 'none';
-    const _topics = document.getElementById('dTopics');
-    if (_topics) _topics.innerHTML = '';
-
-    // README: keep the skeleton-then-render pattern exactly (shimmer stays)
+    // flashes. Every field gets a shimmering .skel state (not just '—'
+    // text) so the whole panel reads as "loading", not as real (possibly
+    // wrong) data. Shared with verifyDirectUrl() via blankDetailFields().
+    blankDetailFields();
     const readmeBox = document.getElementById('dReadmeBox');
-    readmeBox.innerHTML = '<div class="d-readme-skeleton"><div class="sk-line" style="width:60%"></div><div class="sk-line" style="width:92%"></div><div class="sk-line" style="width:84%"></div><div class="sk-line" style="width:70%"></div></div>';
 
     // reset AI panel to un-checked state
     document.getElementById('aiLoading').style.display = 'flex';
@@ -1062,10 +1164,10 @@
         const got = (d && ((d.owner || '').replace(/\/$/, '') + '/' + (d.name || '').replace(/\/$/, ''))) || '';
         if (reqId !== detailReqId) return; // a newer request superseded this one
         if (got !== activeDetailFull) return; // stale/adjacent response
-        if (d.error){ readmeBox.innerHTML = '<p>Failed to load repository details.</p>'; return; }
+        if (d.error){ showDetailError(); return; }
         populateDetail(d, catKey);
       })
-      .catch(() => { if (reqId === detailReqId) readmeBox.innerHTML = '<p>Failed to load repository details.</p>'; });
+      .catch(() => { if (reqId === detailReqId) showDetailError('Network error — please try again.'); });
   }
 
   let scrollY = 0;
@@ -1201,17 +1303,22 @@
       showUrlError('Please paste a valid github.com/owner/repo link.');
       return;
     }
-    // show modal immediately (skeleton)
+    // show modal immediately with a full skeleton (same shared helper used
+    // by openDetail, so this flow never shows stale data from a previous
+    // repo either) — then override owner/name since we already know them
+    // from the pasted URL.
     detailReqId++; // supersede any in-flight openDetail fetch so it can't overwrite this
     activeDetailFull = guess.owner + '/' + guess.name;
+    blankDetailFields();
     document.getElementById('dCatLabel').textContent = 'Repository';
     const catBadge = document.getElementById('dCatBadge');
     catBadge.style.background = 'var(--brand)';
     catBadge.style.color = '#fff';
     catBadge.querySelector('.cdot').style.background = '#fff';
-    document.getElementById('dOwner').textContent = guess.owner + '/';
-    document.getElementById('dName').textContent = guess.name;
-    document.getElementById('dReadmeBox').innerHTML = '<div class="d-readme-skeleton"><div class="sk-line" style="width:60%"></div><div class="sk-line" style="width:92%"></div><div class="sk-line" style="width:84%"></div><div class="sk-line" style="width:70%"></div></div>';
+    const dOwnerEl = document.getElementById('dOwner');
+    const dNameEl = document.getElementById('dName');
+    dOwnerEl.textContent = guess.owner + '/'; dOwnerEl.classList.remove('skel');
+    dNameEl.textContent = guess.name; dNameEl.classList.remove('skel');
     document.getElementById('aiLoading').style.display = 'flex';
     document.getElementById('aiResult').classList.remove('show');
     showPanel('detail');
@@ -1235,7 +1342,7 @@
         if (got !== wantFull) return; // stale/adjacent response
         if (d.error){
           showUrlError(d.message || 'Repository not found or could not be verified.');
-          document.getElementById('dReadmeBox').innerHTML = '<p>' + esc(d.message || 'Repository not found.') + '</p>';
+          showDetailError(d.message || 'Repository not found.');
           return;
         }
         currentRepo = { owner: d.owner, name: d.name, category: '' };

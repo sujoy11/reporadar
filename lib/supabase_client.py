@@ -19,14 +19,23 @@ if SUPABASE_URL and SUPABASE_KEY:
 _MEM_CACHE = {}
 _MEM_VERIFIED = {}
 
+# Bump this to invalidate ALL cached searches after a backend query/format
+# change (e.g. the trending 'stars:>5000' fix). Old cached result sets that
+# were fetched with the previous (buggy) query are ignored once this changes.
+CACHE_VERSION = "v2"
+
+def _ver_key(key):
+    return key + "::" + CACHE_VERSION
+
 TTL = 10 * 60  # 10 minutes
 
 
 def get_cached_search(query):
+    key = _ver_key(query)
     if _client:
         try:
             res = (_client.table("search_cache").select("*")
-                   .eq("query", query).execute())
+                   .eq("query", key).execute())
             if res.data:
                 row = res.data[0]
                 if row["expires_at"] and time.time() < _iso_to_ts(row["expires_at"]):
@@ -34,24 +43,25 @@ def get_cached_search(query):
         except Exception:
             pass
     # memory fallback
-    row = _MEM_CACHE.get(query)
+    row = _MEM_CACHE.get(key)
     if row and time.time() < row["expires_at"]:
         return row["results"]
     return None
 
 
 def set_cached_search(query, results):
+    key = _ver_key(query)
     expires = time.time() + TTL
     if _client:
         try:
             _client.table("search_cache").upsert({
-                "query": query, "results": results,
+                "query": key, "results": results,
                 "cached_at": _now_iso(), "expires_at": _ts_to_iso(expires)
             }).execute()
             return
         except Exception:
             pass
-    _MEM_CACHE[query] = {"results": results, "expires_at": expires}
+    _MEM_CACHE[key] = {"results": results, "expires_at": expires}
 
 
 # In-memory fallback for NL cache (lost on restart, fine for dev)
