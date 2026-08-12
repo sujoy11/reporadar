@@ -1009,9 +1009,30 @@
     catBadge.style.background = cat ? cat.color : 'var(--brand)';
     catBadge.style.color = '#fff';
     catBadge.querySelector('.cdot').style.background = '#fff';
-    // owner/name immediate
-    document.getElementById('dOwner').textContent = repos[i].owner;
-    document.getElementById('dName').textContent = repos[i].name;
+    // BUG FIX: blank/clear every detail field to a placeholder BEFORE the
+    // fetch starts, so no hardcoded example or previous-repo value ever
+    // flashes. README already gets a skeleton below.
+    const _blank = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    _blank('dOwner', '—');
+    _blank('dName', '—');
+    _blank('dDesc', '—');
+    _blank('dStars', '—');
+    _blank('dForks', '—');
+    _blank('dWatchers', '—');
+    _blank('dIssues', '—');
+    _blank('dContributors', '—');
+    _blank('dUpdated', '—');
+    _blank('dCreated', '—');
+    _blank('dBranch', '—');
+    _blank('dSize', '—');
+    _blank('dLangChip', '');
+    _blank('dLicenseChip', '');
+    const _archived = document.getElementById('dArchivedChip');
+    if (_archived) _archived.style.display = 'none';
+    const _homepage = document.getElementById('dHomepageRow');
+    if (_homepage) _homepage.style.display = 'none';
+    const _topics = document.getElementById('dTopics');
+    if (_topics) _topics.innerHTML = '';
 
     // README: keep the skeleton-then-render pattern exactly (shimmer stays)
     const readmeBox = document.getElementById('dReadmeBox');
