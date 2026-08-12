@@ -853,7 +853,7 @@
     catBadge.style.color = '#fff';
     catBadge.querySelector('.cdot').style.background = '#fff';
 
-    document.getElementById('dOwner').textContent = d.owner || '';
+    document.getElementById('dOwner').textContent = (d.owner || '').replace(/\/$/, '');
     document.getElementById('dName').textContent = d.name || '';
     document.getElementById('dDesc').textContent = d.desc || '';
 
