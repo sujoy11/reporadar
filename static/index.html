@@ -392,6 +392,14 @@
     padding:5px 11px; border-radius:999px; margin-bottom:10px;
   }
   .d-cat-badge .cdot{ width:6px; height:6px; border-radius:50%; }
+  /* Hidden Gem badge (NL search): reuses the existing pill language (.d-cat-badge),
+     only a gold accent + soft bg so it reads as a "why is this low-star repo here" hint. */
+  .hidden-gem-badge{
+    display:inline-flex; align-items:center; gap:5px; font-size:10px; font-weight:700;
+    padding:3px 9px; border-radius:999px; margin-left:8px;
+    background:var(--good-soft); color:var(--good);
+  }
+  .hidden-gem-badge .gdot{ width:5px; height:5px; border-radius:50%; background:var(--good); }
   .d-name{ font-weight:800; font-size:20px; }
   .d-owner{ color:var(--ink-soft); font-weight:500; font-size:14px; display:block; margin-bottom:2px; }
   .d-desc{ font-size:14px; color:var(--ink-soft); line-height:1.65; margin-top:12px; }
@@ -763,7 +771,9 @@
     return ''
       + '<span class="rank">#' + (i+1) + '</span>'
       + '<div class="row-main">'
-      +   '<div class="name"><span class="owner">' + esc(r.owner) + '</span>' + esc(r.name) + '</div>'
+      +   '<div class="name"><span class="owner">' + esc(r.owner) + '</span>' + esc(r.name)
+      +     (r.is_gem ? '<span class="hidden-gem-badge"><span class="gdot"></span>Hidden Gem</span>' : '')
+      +   '</div>'
       +   '<p class="row-desc">' + esc(r.desc) + '</p>'
       +   '<div class="meta">'
       +     '<span class="stars">' + STAR_SVG + esc(r.stars) + '</span>'
@@ -817,7 +827,8 @@
         updated: relTime(r.updated_at),
         language: r.language || 'Unknown',
         url: r.html_url || ('https://github.com/' + r.owner + '/' + r.name),
-        topics: r.topics || []
+        topics: r.topics || [],
+        is_gem: !!r.is_gem
       }));
       renderRows();
     }).catch(() => {

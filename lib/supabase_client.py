@@ -54,6 +54,44 @@ def set_cached_search(query, results):
     _MEM_CACHE[query] = {"results": results, "expires_at": expires}
 
 
+# In-memory fallback for NL cache (lost on restart, fine for dev)
+_MEM_NL = {}
+
+
+def get_nl_cache(raw_query):
+    """Return cached (query_variants, ranked_order) or None.
+    ranked_order may be None if only the translation was cached."""
+    if _client:
+        try:
+            res = (_client.table("nl_query_cache").select("*")
+                   .eq("raw_query", raw_query).execute())
+            if res.data:
+                row = res.data[0]
+                return row.get("query_variants"), row.get("ranked_order")
+        except Exception:
+            pass
+    row = _MEM_NL.get(raw_query)
+    if row:
+        return row.get("query_variants"), row.get("ranked_order")
+    return None, None
+
+
+def set_nl_cache(raw_query, query_variants, ranked_order=None):
+    """Upsert NL translation (+optional ranking) into cache."""
+    if _client:
+        try:
+            _client.table("nl_query_cache").upsert({
+                "raw_query": raw_query,
+                "query_variants": query_variants,
+                "ranked_order": ranked_order,
+                "cached_at": _now_iso(),
+            }).execute()
+            return
+        except Exception:
+            pass
+    _MEM_NL[raw_query] = {"query_variants": query_variants, "ranked_order": ranked_order}
+
+
 def get_verified(owner, name):
     key = f"{owner}/{name}"
     if _client:

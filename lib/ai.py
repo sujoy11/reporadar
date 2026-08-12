@@ -131,6 +131,77 @@ def _call_gemini(full_name, data):
     return _parse_json(txt), GEMINI_MODEL
 
 
+# ---------------------------------------------------------------------------
+# Generic natural-language JSON caller (used by the NL search layer).
+# Reuses the SAME provider chain as verify_repo: OpenRouter primary ->
+# OpenRouter fallback -> Mistral -> Gemini. Does NOT touch verify_repo.
+# ---------------------------------------------------------------------------
+def _raw_openrouter(prompt, model=OPENROUTER_MODEL):
+    key = os.environ.get("OPENROUTER_API_KEY")
+    if not key:
+        raise RuntimeError("no_openrouter_key")
+    body = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.2,
+        "response_format": {"type": "json_object"},
+    }).encode()
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=body,
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        method="POST",
+    )
+    r = urllib.request.urlopen(req, timeout=40)
+    content = json.loads(r.read().decode())["choices"][0]["message"]["content"]
+    return _parse_json(content)
+
+
+def _raw_mistral(prompt):
+    key = os.environ.get("MISTRAL_API_KEY")
+    if not key:
+        raise RuntimeError("no_mistral_key")
+    body = json.dumps({
+        "model": MISTRAL_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.2,
+        "response_format": {"type": "json_object"},
+    }).encode()
+    req = urllib.request.Request(
+        "https://api.mistral.ai/v1/chat/completions",
+        data=body,
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+        method="POST",
+    )
+    r = urllib.request.urlopen(req, timeout=30)
+    content = json.loads(r.read().decode())["choices"][0]["message"]["content"]
+    return _parse_json(content)
+
+
+def _raw_gemini(prompt):
+    key = os.environ.get("GEMINI_API_KEY")
+    if not key:
+        raise RuntimeError("no_gemini_key")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={key}"
+    body = json.dumps({"contents": [{"parts": [{"text": prompt}]}]}).encode()
+    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
+    r = urllib.request.urlopen(req, timeout=30)
+    txt = json.loads(r.read().decode())["candidates"][0]["content"]["parts"][0]["text"]
+    return _parse_json(txt)
+
+
+def call_ai_json(prompt):
+    """Run a natural-language -> JSON task through the provider chain.
+    Returns the parsed dict, or raises RuntimeError if all providers fail."""
+    last_err = None
+    for fn in (_raw_openrouter, _raw_mistral, _raw_gemini):
+        try:
+            return fn(prompt)
+        except Exception as e:
+            last_err = e
+    raise RuntimeError(f"ai_unavailable: {last_err}")
+
+
 def verify_repo(full_name, data):
     """OpenRouter primary (nemotron-omni-30b) -> OpenRouter fallback (gemma-4-26b)
     -> Mistral -> Gemini. Returns (fields_dict, real_model_slug)."""
