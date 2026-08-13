@@ -147,15 +147,18 @@ def get_verified(owner, name):
 
 def _verified_at_iso(value):
     """Return the verdict timestamp as an ISO 8601 string for the frontend.
-    Accepts a stored string/timestamptz; falls back to now() if missing."""
-    if value and isinstance(value, str) and len(value) >= 10:
-        return value.replace("Z", "") if value.endswith("Z") else value
-    if value:  # numeric/other -> normalize
-        try:
-            return _ts_to_iso(float(value))
-        except Exception:
-            pass
-    return _now_iso()
+    Supabase returns timestamptz columns as Python datetime objects, so we
+    handle both datetime and string inputs. Falls back to now() if missing."""
+    if not value:
+        return _now_iso()
+    if isinstance(value, str):
+        return value  # already an ISO string
+    if hasattr(value, "isoformat"):  # datetime / related
+        return value.strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        return _ts_to_iso(float(value))
+    except Exception:
+        return _now_iso()
 
 
 def set_verified(owner, name, verdict, summary, provider, stars,
