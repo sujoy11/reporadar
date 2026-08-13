@@ -6,13 +6,14 @@ import json
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from routes import search, verify, cron, repo, verify_url
+from routes import search, verify, cron, repo, verify_url, debug_supabase
 
 app = FastAPI(title="RepoRadar")
 app.include_router(search.router)
 app.include_router(verify.router)
 app.include_router(repo.router)
 app.include_router(verify_url.router)
+app.include_router(debug_supabase.router)  # TEMP diagnostic
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 
