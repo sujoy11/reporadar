@@ -130,13 +130,12 @@
     transition:transform .16s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, background-position .5s ease;
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
   }
-  .btn-spinner{
-    display:none; width:14px; height:14px; border-radius:50%;
-    border:2px solid rgba(255,255,255,.4); border-top-color:#fff;
-    animation:spin .6s linear infinite;
+  .btn-skel-bar{
+    display:none; width:34px; height:8px; border-radius:999px;
+    background:linear-gradient(90deg, rgba(255,255,255,.32) 25%, rgba(255,255,255,.85) 37%, rgba(255,255,255,.32) 63%);
+    background-size:400% 100%; animation:sk-shimmer 1.4s ease-in-out infinite;
   }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
-  .url-verify-btn.loading .btn-spinner{ display:inline-block; }
+  .url-verify-btn.loading .btn-skel-bar{ display:inline-block; }
   .url-verify-btn.loading{ opacity:.85; pointer-events:none; }
   .url-verify-btn:hover{ box-shadow:0 12px 26px -8px rgba(52,84,255,.6); transform:translateY(-1px); background-position:100% 0%; }
   .url-verify-btn:active{ transform:scale(.94); }
@@ -455,7 +454,7 @@
     background:var(--brand-soft); color:var(--brand); padding:1px 6px; border-radius:5px; font-size:12px;
   }
   .d-readme-skeleton{ display:flex; flex-direction:column; gap:8px; }
-  .d-readme-skeleton .sk-line{
+  .sk-line{
     height:11px; border-radius:6px;
     background:linear-gradient(90deg, var(--line) 25%, #F3F1E6 37%, var(--line) 63%);
     background-size:400% 100%; animation:sk-shimmer 1.4s ease-in-out infinite;
@@ -534,15 +533,15 @@
   .open-repo-btn:active{ transform:scale(.98); }
 
   /* ---- AI panel ---- */
-  .ai-loading-block{ display:flex; flex-direction:column; align-items:center; text-align:center; padding:26px 10px 10px; }
-  .ai-ring{
-    width:52px; height:52px; border-radius:50%;
-    border:4px solid var(--brand-soft); border-top-color:var(--violet);
-    animation:spin .8s linear infinite; margin-bottom:16px;
+  .ai-loading-block{ display:flex; flex-direction:column; align-items:stretch; padding:4px 2px 2px; }
+  .ai-skel-badge{
+    width:126px; height:28px; border-radius:999px; margin-bottom:20px;
+    background:linear-gradient(90deg, var(--line) 25%, #F3F1E6 37%, var(--line) 63%);
+    background-size:400% 100%; animation:sk-shimmer 1.4s ease-in-out infinite;
   }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
-  .ai-loading-block p{ font-size:13px; color:var(--ink-soft); margin:0; }
-  .ai-loading-block .steps{ margin-top:10px; font-size:11.5px; color:var(--ink-faint); }
+  .ai-skel-rows{ display:flex; flex-direction:column; gap:11px; margin-bottom:20px; }
+  .ai-skel-para{ display:flex; flex-direction:column; gap:8px; margin-bottom:6px; }
+  .ai-loading-caption{ font-size:12px; color:var(--ink-faint); margin:2px 0 0; text-align:center; }
 
   .ai-result{ display:none; text-align:center; }
   .ai-result.show{ display:block; animation:panel-in .35s ease; }
@@ -609,7 +608,7 @@
         <input type="text" id="directUrlInput" placeholder="https://github.com/owner/repo">
       </div>
       <button type="button" class="url-verify-btn" id="urlVerifyBtn" onclick="verifyDirectUrl()">
-        <span class="btn-spinner" id="urlVerifySpinner"></span>
+        <span class="btn-skel-bar" id="urlVerifySpinner"></span>
         <span id="urlVerifyLabel">Verify</span>
       </button>
     </div>
@@ -730,9 +729,20 @@
       <!-- panel 2: AI verify result -->
       <div class="panel" id="panelAI">
         <div class="ai-loading-block" id="aiLoading">
-          <div class="ai-ring"></div>
-          <p>Checking README, commits & issues…</p>
-          <div class="steps" id="aiSteps">Asking Gemini…</div>
+          <div class="ai-skel-badge"></div>
+          <div class="ai-skel-rows">
+            <div class="sk-line" style="width:100%"></div>
+            <div class="sk-line" style="width:100%"></div>
+            <div class="sk-line" style="width:100%"></div>
+            <div class="sk-line" style="width:100%"></div>
+            <div class="sk-line" style="width:100%"></div>
+          </div>
+          <div class="ai-skel-para">
+            <div class="sk-line" style="width:92%"></div>
+            <div class="sk-line" style="width:84%"></div>
+            <div class="sk-line" style="width:58%"></div>
+          </div>
+          <p class="ai-loading-caption" id="aiSteps">Checking README, commits & issues…</p>
         </div>
         <div class="ai-result" id="aiResult">
           <span class="ai-verdict-badge good" id="aiBadge"><span class="sw"></span>Working</span>
@@ -1361,7 +1371,25 @@
     btn.classList.add('searching');
     spawnParticles(btn);
     const inp = document.querySelector('.search input');
-    loadRepos(inp ? inp.value : '', null);
+    const q = inp ? inp.value.trim() : '';
+    if (q){
+      // free-text search is not tied to any one category chip, so no chip
+      // should stay visually "active" while unrelated search results show.
+      activeCategory = 'search';
+      Array.from(catScroll.children).forEach(chip => {
+        chip.classList.remove('active');
+        chip.style.background = '';
+      });
+      loadRepos(q, null);
+    } else {
+      // BUG FIX: an empty query used to always fall back to Trending
+      // (loadRepos(value, null) -> loadRepos defaults empty+no-category to
+      // trending) even while a different category chip (e.g. Cybersecurity)
+      // stayed visually selected — showing Trending results under a
+      // Cybersecurity-labeled tab. Clicking Search with nothing typed now
+      // just re-fetches whichever category is currently active instead.
+      loadRepos(null, activeCategory);
+    }
     setTimeout(() => btn.classList.remove('searching'), 500);
   }
 
