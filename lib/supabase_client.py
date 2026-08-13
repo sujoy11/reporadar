@@ -192,15 +192,35 @@ def keepalive():
 
 
 def _now_iso():
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    # Naive ISO (no 'Z') — the live Supabase columns are TIMESTAMP (without
+    # tz), which rejects the 'Z' suffix. Render runs in UTC, so naive UTC
+    # strings are consistent. Frontend display adds 'Z' where needed.
+    return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())
 
 
 def _ts_to_iso(ts):
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(ts))
+    return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(ts))
 
 
 def _iso_to_ts(iso):
-    try:
-        return time.mktime(time.strptime(iso, "%Y-%m-%dT%H:%M:%SZ")) - time.timezone
-    except Exception:
+    """Robust parse of a stored timestamp into epoch seconds.
+    Handles Supabase-returned datetime objects, ISO strings with/without 'Z'
+    and with/without 'T'. None/0 -> 0 (treated as expired)."""
+    if not iso:
         return 0
+    if isinstance(iso, (int, float)):
+        return float(iso)
+    if hasattr(iso, "timestamp"):  # datetime / related
+        try:
+            return iso.timestamp()
+        except Exception:
+            pass
+    s = str(iso).strip().replace("Z", "").replace("T", " ")
+    if "." in s:  # chop fractional seconds
+        s = s.split(".")[0]
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S%z", "%Y-%m-%d %H:%M"):
+        try:
+            return time.mktime(time.strptime(s, fmt)) - time.timezone
+        except Exception:
+            continue
+    return 0
