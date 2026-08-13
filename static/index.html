@@ -571,6 +571,7 @@
   .ai-summary{ font-size:13.5px; color:var(--ink-soft); line-height:1.7; margin-top:16px; text-align:left; }
   .ai-meta-row{ display:flex; justify-content:center; gap:8px; margin-top:16px; }
   .ai-tag{ font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:999px; background:var(--paper); color:var(--ink-soft); }
+  .ai-tag.stale{ background:var(--warn-soft); color:var(--warn); }
   .ai-disclaimer{ font-size:11px; color:var(--ink-faint); margin-top:14px; }
 </style>
 </head>
@@ -758,7 +759,7 @@
 
           <div class="ai-meta-row">
             <span class="ai-tag" id="aiModelTag">via AI</span>
-            <span class="ai-tag">checked just now</span>
+            <span class="ai-tag" id="aiCheckedTag">checked just now</span>
           </div>
           <p class="ai-disclaimer">AI-based assessment, not a guarantee.</p>
         </div>
@@ -1216,6 +1217,7 @@
     const result = document.getElementById('aiResult');
     const badge = document.getElementById('aiBadge');
     const modelTag = document.getElementById('aiModelTag');
+    const checkedTag = document.getElementById('aiCheckedTag');
     const maintained = document.getElementById('aiMaintained');
     const maturity = document.getElementById('aiMaturity');
     const community = document.getElementById('aiCommunity');
@@ -1250,6 +1252,21 @@
         setup.textContent = d.setup || '—';
         reasoning.textContent = d.reasoning || '—';
         modelTag.textContent = 'via ' + (d.model || 'AI');
+        // BACKEND HOOK: verified_at (or checked_at) is expected as an ISO
+        // timestamp from /api/verify — the AI-verdict cache has no TTL
+        // server-side, so this label is the only way the user can tell how
+        // old a verdict actually is. Falls back to "just now" only when the
+        // backend hasn't sent a timestamp (e.g. a verdict computed on this
+        // exact request).
+        const checkedIso = d.verified_at || d.checked_at || null;
+        if (checkedIso){
+          const ageDays = (Date.now() - new Date(checkedIso).getTime()) / 86400000;
+          checkedTag.textContent = 'checked ' + relTime(checkedIso);
+          checkedTag.classList.toggle('stale', ageDays > 30);
+        } else {
+          checkedTag.textContent = 'checked just now';
+          checkedTag.classList.remove('stale');
+        }
         result.classList.add('show');
       })
       .catch(() => {
@@ -1257,6 +1274,8 @@
         badge.className = 'ai-verdict-badge warn';
         badge.innerHTML = '<span class="sw"></span>Unavailable';
         reasoning.textContent = 'AI verdict temporarily unavailable. Try again in a moment.';
+        checkedTag.textContent = 'checked just now';
+        checkedTag.classList.remove('stale');
         result.classList.add('show');
       });
   }
