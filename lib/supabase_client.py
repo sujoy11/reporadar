@@ -3,6 +3,7 @@ This keeps the app RUNNING even without Supabase configured (dev/test mode).
 """
 import os
 import time
+from datetime import datetime
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -28,6 +29,33 @@ def _ver_key(key):
     return key + "::" + CACHE_VERSION
 
 TTL = 10 * 60  # 10 minutes
+
+# Per-repo AI-verdict TTL. The search-result cache (TTL above) is unchanged;
+# this ONLY governs how long a computed AI verdict stays valid before it is
+# re-verified on the next /api/verify call. 30 days.
+VERDICT_TTL = 30 * 24 * 60 * 60
+
+
+def _parse_ts(value):
+    """Tolerant parse of a stored timestamp into epoch seconds.
+    Accepts ISO strings (with/without 'Z'/'T'), Postgres timestamptz, or
+    None/empty -> 0 (treated as infinitely old, i.e. expired)."""
+    if not value:
+        return 0
+    if isinstance(value, (int, float)):
+        return float(value)
+    s = str(value).strip().replace("Z", "").replace("T", " ")
+    if "." in s:  # chop fractional seconds
+        s = s.split(".")[0]
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S%z", "%Y-%m-%d %H:%M"):
+        try:
+            return time.mktime(time.strptime(s, fmt)) - time.timezone
+        except Exception:
+            continue
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+    except Exception:
+        return 0
 
 
 def get_cached_search(query):
@@ -109,10 +137,25 @@ def get_verified(owner, name):
             res = (_client.table("verified_repos").select("*")
                    .eq("owner", owner).eq("name", name).execute())
             if res.data:
-                return res.data[0]
+                row = res.data[0]
+                row["verified_at"] = _verified_at_iso(row.get("verified_at"))
+                return row
         except Exception:
             pass
     return _MEM_VERIFIED.get(key)
+
+
+def _verified_at_iso(value):
+    """Return the verdict timestamp as an ISO 8601 string for the frontend.
+    Accepts a stored string/timestamptz; falls back to now() if missing."""
+    if value and isinstance(value, str) and len(value) >= 10:
+        return value.replace("Z", "") if value.endswith("Z") else value
+    if value:  # numeric/other -> normalize
+        try:
+            return _ts_to_iso(float(value))
+        except Exception:
+            pass
+    return _now_iso()
 
 
 def set_verified(owner, name, verdict, summary, provider, stars,
@@ -120,6 +163,7 @@ def set_verified(owner, name, verdict, summary, provider, stars,
                  setup=None, reasoning=None, model=None):
     row = {"owner": owner, "name": name, "verdict": verdict,
            "summary": summary, "ai_provider": provider,
+           "verified_at": _now_iso(),
            "github_stars_at_time": stars,
            "model": model or provider,
            "maintained": maintained, "maturity": maturity,

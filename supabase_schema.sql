@@ -13,10 +13,15 @@ CREATE TABLE IF NOT EXISTS verified_repos (
   verdict TEXT,
   summary TEXT,
   ai_provider TEXT,
-  verified_at TIMESTAMP DEFAULT now(),
+  verified_at TIMESTAMPTZ DEFAULT now(),
   github_stars_at_time INT,
   UNIQUE(owner, name)
 );
+
+-- Migration for existing tables: ensure verified_at exists as timestamptz.
+-- Safe to re-run (IF NOT EXISTS / no-op when already present).
+ALTER TABLE IF EXISTS verified_repos
+  ADD COLUMN IF NOT EXISTS verified_at TIMESTAMPTZ DEFAULT now();
 
 CREATE TABLE IF NOT EXISTS saved_repos (
   id SERIAL PRIMARY KEY,
