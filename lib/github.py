@@ -55,7 +55,7 @@ def search_repositories(query, token, per_page=30):
         r = urllib.request.urlopen(req, timeout=25)
         data = json.loads(r.read().decode())
     except urllib.error.HTTPError as e:
-        if e.code == 403:
+        if e.code in (403, 429):
             raise RuntimeError("rate_limit_search")
         raise RuntimeError(f"github_search_{e.code}")
     items = []

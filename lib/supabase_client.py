@@ -130,6 +130,28 @@ def set_nl_cache(raw_query, query_variants, ranked_order=None):
     _MEM_NL[raw_query] = {"query_variants": query_variants, "ranked_order": ranked_order}
 
 
+def _backfill_from_summary(row):
+    """If dedicated AI columns are missing (Supabase table not migrated),
+    try to recover them from the JSON-encoded summary field."""
+    AI_FIELDS = ("maintained", "maturity", "community", "docs", "setup",
+                 "reasoning", "model")
+    if any(row.get(f) for f in AI_FIELDS):
+        return  # already populated, nothing to backfill
+    raw = row.get("summary")
+    if not raw or not isinstance(raw, str):
+        return
+    try:
+        import json as _json
+        parsed = _json.loads(raw)
+        if not isinstance(parsed, dict):
+            return
+    except (ValueError, TypeError):
+        return
+    for f in AI_FIELDS:
+        if f in parsed and row.get(f) is None:
+            row[f] = parsed[f]
+
+
 def get_verified(owner, name):
     key = f"{owner}/{name}"
     if _client:
@@ -139,6 +161,7 @@ def get_verified(owner, name):
             if res.data:
                 row = res.data[0]
                 row["verified_at"] = _verified_at_iso(row.get("verified_at"))
+                _backfill_from_summary(row)
                 return row
         except Exception:
             pass
@@ -164,6 +187,23 @@ def _verified_at_iso(value):
 def set_verified(owner, name, verdict, summary, provider, stars,
                  maintained=None, maturity=None, community=None, docs=None,
                  setup=None, reasoning=None, model=None):
+    # Pack structured AI fields into summary as JSON so they survive even
+    # when the Supabase table lacks the dedicated columns (runtime fix for
+    # missing ALTER — see supabase_schema.sql migration block).
+    import json as _json
+    structured = {}
+    if maintained is not None: structured["maintained"] = maintained
+    if maturity is not None: structured["maturity"] = maturity
+    if community is not None: structured["community"] = community
+    if docs is not None: structured["docs"] = docs
+    if setup is not None: structured["setup"] = setup
+    if reasoning is not None: structured["reasoning"] = reasoning
+    if model is not None: structured["model"] = model or provider
+    if structured:
+        # Also keep original verdict + summary text inside the JSON blob
+        structured["verdict"] = verdict
+        structured["_original_summary"] = summary
+        summary = _json.dumps(structured, ensure_ascii=False)
     row = {"owner": owner, "name": name, "verdict": verdict,
            "summary": summary, "ai_provider": provider,
            "verified_at": _now_iso(),

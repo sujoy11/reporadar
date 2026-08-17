@@ -13,6 +13,7 @@ app.include_router(search.router)
 app.include_router(verify.router)
 app.include_router(repo.router)
 app.include_router(verify_url.router)
+app.include_router(cron.router)  # /health, /api/prewarm, /api/keepalive
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 

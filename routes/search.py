@@ -207,7 +207,7 @@ async def search(request: Request, q: str = "", category: str = "", per_page: in
         token = os.environ.get("GITHUB_TOKEN")
         try:
             results = gh.search_repositories(cq, token, per_page=per_page)
-        except RuntimeError as e:
+        except Exception as e:
             if "rate_limit" in str(e):
                 return {"error": "rate_limit", "message": "Search API busy, try again in a few minutes.", "results": []}
             return {"error": "github_error", "message": str(e), "results": []}
@@ -235,7 +235,7 @@ async def search(request: Request, q: str = "", category: str = "", per_page: in
     token = os.environ.get("GITHUB_TOKEN")
     try:
         results = gh.search_repositories(q, token, per_page=per_page)
-    except RuntimeError as e:
+    except Exception as e:
         if "rate_limit" in str(e):
             return {"error": "rate_limit", "message": "Search API busy, try again in a few minutes.",
                     "results": []}

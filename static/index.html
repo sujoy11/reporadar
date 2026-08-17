@@ -554,6 +554,20 @@
   .ai-tag{ font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:999px; background:var(--paper); color:var(--ink-soft); }
   .ai-tag.stale{ background:var(--warn-soft); color:var(--warn); }
   .ai-disclaimer{ font-size:11px; color:var(--ink-faint); margin-top:14px; }
+
+  /* BUG 5: mobile responsiveness for narrow screens (360-414px) */
+  @media (max-width:480px){
+    .hero h1{ font-size:22px; }
+    .hero p{ font-size:12.5px; }
+    .search-row{ flex-wrap:nowrap; gap:8px; }
+    .search{ padding:10px 12px; }
+    .search input{ font-size:13px; }
+    .smart-go{ width:42px; height:42px; }
+    .stat-grid{ grid-template-columns:repeat(2,1fr); }
+    .d-name{ font-size:17px; }
+    .ai-detail-row .label{ width:68px; font-size:10px; }
+    .ai-detail-row .value{ font-size:11.5px; }
+  }
 </style>
 </head>
 <body>
@@ -1202,6 +1216,19 @@
       .then(r => r.json())
       .then(d => {
         loading.style.display = 'none';
+        // BUG 1(b): handle ai_unavailable or all-null verdict fields
+        if (d.error === 'ai_unavailable' || (d.maintained == null && d.reasoning == null && !d.verdict)) {
+          badge.className = 'ai-verdict-badge warn';
+          badge.innerHTML = '<span class="sw"></span>Unavailable';
+          reasoning.textContent = 'AI verdict unavailable right now — the AI provider may be down or unconfigured. Try again later.';
+          maintained.textContent = '—'; maturity.textContent = '—';
+          community.textContent = '—'; docs.textContent = '—'; setup.textContent = '—';
+          modelTag.textContent = 'via AI';
+          checkedTag.textContent = 'checked just now';
+          checkedTag.classList.remove('stale');
+          result.classList.add('show');
+          return;
+        }
         const vt = (d.verdict || 'good').toLowerCase();
         let vclass = 'good';
         if (vt.indexOf('outdat') >= 0) vclass = 'bad';
