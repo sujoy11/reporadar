@@ -173,6 +173,12 @@ async def robots():
     return PlainTextResponse(body)
 
 
+@app.get("/googlee72f07f0c0a9246f.html")
+async def gsc_verify():
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse("google-site-verification: googlee72f07f0c0a9246f.html")
+
+
 app.mount("/static", StaticFiles(directory=os.path.join(BASE, "static")), name="static")
 
 
