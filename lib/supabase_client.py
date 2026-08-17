@@ -132,11 +132,15 @@ def set_nl_cache(raw_query, query_variants, ranked_order=None):
 
 def _backfill_from_summary(row):
     """If dedicated AI columns are missing (Supabase table not migrated),
-    try to recover them from the JSON-encoded summary field."""
+    try to recover them from the JSON-encoded summary field.
+
+    Per-field only: a field is filled from the parsed summary iff it is
+    currently None. We do NOT early-return when an unrelated field (e.g.
+    ``model``) happens to be non-null, which would otherwise skip backfilling
+    the fields that are actually missing.
+    """
     AI_FIELDS = ("maintained", "maturity", "community", "docs", "setup",
                  "reasoning", "model")
-    if any(row.get(f) for f in AI_FIELDS):
-        return  # already populated, nothing to backfill
     raw = row.get("summary")
     if not raw or not isinstance(raw, str):
         return
@@ -148,7 +152,7 @@ def _backfill_from_summary(row):
     except (ValueError, TypeError):
         return
     for f in AI_FIELDS:
-        if f in parsed and row.get(f) is None:
+        if row.get(f) is None and f in parsed and parsed[f] is not None:
             row[f] = parsed[f]
 
 
