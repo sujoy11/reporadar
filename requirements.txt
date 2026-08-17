@@ -1,5 +1,8 @@
-fastapi
-uvicorn[standard]
-supabase
-requests
-python-dotenv
+# Pinned to known-good versions (verified build 2026-08-17).
+# Unpinned deps caused a non-reproducible Render build failure; pinning
+# makes the build deterministic across machines.
+fastapi==0.141.1
+uvicorn[standard]==0.52.3
+supabase==2.31.0
+requests==2.34.2
+python-dotenv==1.2.3
