@@ -9,7 +9,7 @@ import json
 OPENROUTER_MODEL = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"
 OPENROUTER_MODEL_FALLBACK = "google/gemma-4-26b-a4b-it:free"
 MISTRAL_MODEL = "mistral-small-latest"
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 PROMPT = """You are analyzing a GitHub repository based ONLY on the data provided.
 Do not invent facts. Reply with ONLY a single JSON object (no markdown, no code
